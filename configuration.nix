@@ -4,11 +4,6 @@
 { inputs, config, pkgs, ... }:
 
 {
-  imports = [ 
-    # Include the results of the hardware scan.
-    ./hardware-configuration.nix
-  ];
-
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.settings.substituters = [
 	"https://cache.nixos.org/"
@@ -33,7 +28,7 @@
   time.timeZone = "Asia/Shanghai";
 
   # set fonts
-  fonts.fonts = with pkgs; [
+  fonts.packages = with pkgs; [
     # 基本中文字体（推荐）
     wqy_zenhei # 文泉驿正黑
     wqy_microhei # 文泉驿微米黑
@@ -161,6 +156,13 @@
       kdePackages.kate
       # thunderbird
     ];
+  };
+
+  # home-manager: 用户级配置(声明式管理个人环境 / dotfiles)
+  home-manager = {
+    useGlobalPkgs = true;        # 复用系统 nixpkgs,避免重复实例化
+    useUserPackages = true;      # 用户包装到用户 profile
+    users.tianjiao = import ./home.nix;
   };
 
   # Install firefox.
