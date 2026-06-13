@@ -27,6 +27,10 @@
   # ─── 网络 ──────────────────────────────────────────────────
   networking.hostName = "nixos";
   networking.networkmanager.enable = true;
+  networking.firewall = {
+    allowedTCPPorts = [ 53317 ];  # LocalSend
+    allowedUDPPorts = [ 53317 ];
+  };
 
   # ─── 时间 & 语言 ───────────────────────────────────────────
   time.timeZone = "Asia/Shanghai";
