@@ -1,0 +1,4 @@
+*.bak
+*.bak.*
+*.def.bak
+*.pre-flake*
