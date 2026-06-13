@@ -22,6 +22,20 @@ nix flake update                            # 更新依赖
 sudo nixos-rebuild switch --rollback        # 回滚到上一代
 ```
 
+## 加速:临时用国内镜像
+
+下载慢时,用 `--option` 一次性指定国内镜像(**不改配置文件,仅本次构建生效**):
+
+```bash
+sudo nixos-rebuild switch --flake .#nixos \
+  --option substituters "https://mirrors.ustc.edu.cn/nix-channels/store https://cache.nixos.org/" \
+  --option trusted-public-keys "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+```
+
+镜像任选(替换上面 URL 即可):
+- **USTC(中科大)**:`https://mirrors.ustc.edu.cn/nix-channels/store`
+- **TUNA(清华)**:`https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store`
+
 ## 修改配置
 
 - 系统级(桌面/服务/网络)→ `configuration.nix`
