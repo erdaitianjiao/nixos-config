@@ -1,60 +1,28 @@
-# Edit this configuration file to define what should be installed on
-# your system. Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
+# NixOS 系统级配置 —— 桌面 / 服务 / 网络 / 系统软件
+# 用户级配置(个人软件 / dotfiles)见 home.nix
 { inputs, config, pkgs, ... }:
 
 {
+  # ─── Nix 设置 ───────────────────────────────────────────────
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  nix.settings.substituters = [
-	"https://cache.nixos.org/"
 
-  ];
-
-  # Bootloader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-
-  networking.hostName = "nixos"; # Define your hostname.
-  # networking.wireless.enable = true; # Enables wireless support via wpa_supplicant.
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Enable networking
-  networking.networkmanager.enable = true;
-
-  # Set your time zone.
-  time.timeZone = "Asia/Shanghai";
-
-  # set fonts
-  fonts.packages = with pkgs; [
-    # 基本中文字体（推荐）
-    wqy_zenhei # 文泉驿正黑
-    wqy_microhei # 文泉驿微米黑
-    noto-fonts # Noto 系列（含中文）
-    # 可选：更多中文字体
-    source-han-sans # 思源黑体
-    source-han-serif # 思源宋体
-    sarasa-gothic # 更纱黑体
-    
-    # nerd
-    nerd-fonts.meslo-lg
-    nerd-fonts.fira-code
-    nerd-fonts.jetbrains-mono
-
-  ];
-
-  fonts.fontconfig = {
-    enable = true;
-    defaultFonts = {
-      monospace = [ "WenQuanYi Micro Hei Mono" "DejaVu Sans Mono" ];
-      sansSerif = [ "WenQuanYi Micro Hei" "DejaVu Sans" ];
-      serif = [ "WenQuanYi Zen Hei" "DejaVu Serif" ];
-    };
+  nixpkgs.config = {
+    allowUnfree = true;
+    permittedInsecurePackages = [ "docker-28.5.2" ];
   };
 
-  # Select internationalisation properties.
+  # ─── 启动 (Boot) ───────────────────────────────────────────
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.kernelModules = [ "tcp_bbr" ];  # 拥塞控制(hardware-configuration.nix 另有 kvm-intel,会自动合并)
+
+  # ─── 网络 ──────────────────────────────────────────────────
+  networking.hostName = "nixos";
+  networking.networkmanager.enable = true;
+
+  # ─── 时间 & 语言 ───────────────────────────────────────────
+  time.timeZone = "Asia/Shanghai";
+
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "zh_CN.UTF-8";
@@ -68,42 +36,50 @@
     LC_TIME = "zh_CN.UTF-8";
   };
 
-  # 启用 Fcitx5 输入法框架
+  # ─── 输入法 (Fcitx5) ───────────────────────────────────────
   i18n.inputMethod = {
     enabled = "fcitx5";
-    fcitx5.addons = with pkgs; [
-      qt6Packages.fcitx5-chinese-addons
-      # fcitx5-rime # 中州韵（Rime）输入引擎
-      # fcitx5-mozc # 日文输入引擎
-      # fcitx5-hangul # 韩文输入引擎
-      # fcitx5-unikey # 越南文输入引擎
-      # 您可以根据需要选择安装
-    ];
+    fcitx5.addons = with pkgs; [ qt6Packages.fcitx5-chinese-addons ];
+  };
+  environment.variables = {
+    GTK_IM_MODULE = "fcitx";
+    QT_IM_MODULE = "fcitx";
+    XMODIFIERS = "@im=fcitx";
   };
 
-  # Enable the X11 windowing system.
-  # You can disable this if you're only using the Wayland session.
+  # ─── 字体 ──────────────────────────────────────────────────
+  fonts.packages = with pkgs; [
+    # 中文
+    wqy_zenhei
+    wqy_microhei
+    noto-fonts
+    source-han-sans
+    source-han-serif
+    sarasa-gothic
+    # Nerd Fonts
+    nerd-fonts.meslo-lg
+    nerd-fonts.fira-code
+    nerd-fonts.jetbrains-mono
+  ];
+  fonts.fontconfig = {
+    enable = true;
+    defaultFonts = {
+      monospace = [ "WenQuanYi Micro Hei Mono" "DejaVu Sans Mono" ];
+      sansSerif = [ "WenQuanYi Micro Hei" "DejaVu Sans" ];
+      serif = [ "WenQuanYi Zen Hei" "DejaVu Serif" ];
+    };
+  };
+
+  # ─── 桌面环境 (Plasma 6) ───────────────────────────────────
   services.xserver.enable = true;
-
-  # Enable the KDE Plasma Desktop Environment.
-  services.displayManager.sddm.enable = true;
-  services.desktopManager.plasma6.enable = true;
-
-  # Configure keymap in X11
   services.xserver.xkb = {
     layout = "us";
     variant = "";
   };
+  services.displayManager.sddm.enable = true;
+  services.desktopManager.plasma6.enable = true;
 
-  # enable ssh
-  services.openssh = {
-    enable=true;
-  };
-
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
-
-  # Enable sound with pipewire.
+  # ─── 声音 (PipeWire) ───────────────────────────────────────
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
@@ -111,136 +87,79 @@
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
-    #jack.enable = true;
-    # use the example session manager (no others are packaged yet so this is enabled by default,
-    # no need to redefine it in your config for now)
-    #media-session.enable = true;
   };
-	
 
-  # enable Zsh 
+  # ─── 服务 ──────────────────────────────────────────────────
+  services.openssh.enable = true;     # SSH
+  services.printing.enable = true;    # 打印 (CUPS)
+  services.flatpak.enable = true;     # Flatpak
+  services.v2raya.enable = true;      # 代理
+
+  # ─── 虚拟化 (Docker) ───────────────────────────────────────
+  virtualisation.docker.enable = true;
+
+  # ─── Shell (Zsh + Oh My Zsh + powerlevel10k) ───────────────
   programs.zsh = {
     enable = true;
-    # enable Oh My Zsh
     ohMyZsh = {
       enable = true;
       plugins = [ "git" "sudo" ];
-      # theme powerlevel10k
       theme = "powerlevel10k/powerlevel10k";
     };
-
-    syntaxHighlighting.enable = true;  
+    syntaxHighlighting.enable = true;
     autosuggestions.enable = true;
-    enableCompletion = true; 
-  
+    enableCompletion = true;
     promptInit = "source ${pkgs.zsh-powerlevel10k}/share/zsh-powerlevel10k/powerlevel10k.zsh-theme";
   };
 
-  # enable docker
-  virtualisation.docker.enable = true;  
+  # ─── 程序 ──────────────────────────────────────────────────
+  programs.firefox.enable = true;
+  programs.nix-ld.enable = true;  # 运行动态链接的二进制
 
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
-
-  # Define a user account. Don't forget to set a password with ‘passwd’.
+  # ─── 用户 & home-manager ───────────────────────────────────
   users.users.tianjiao = {
     isNormalUser = true;
     description = "tianjiao";
     extraGroups = [ "networkmanager" "wheel" ];
-
-    # shell
     shell = pkgs.zsh;
-
-    packages = with pkgs; [
-      kdePackages.kate
-      # thunderbird
-    ];
+    packages = with pkgs; [ kdePackages.kate ];
   };
 
-  # home-manager: 用户级配置(声明式管理个人环境 / dotfiles)
+  # home-manager: 用户级配置(个人软件 / dotfiles,只对 tianjiao 生效)
   home-manager = {
-    useGlobalPkgs = true;        # 复用系统 nixpkgs,避免重复实例化
-    useUserPackages = true;      # 用户包装到用户 profile
+    useGlobalPkgs = true;       # 复用系统 nixpkgs,避免重复实例化
+    useUserPackages = true;     # 用户包装到用户 profile
     users.tianjiao = import ./home.nix;
   };
 
-  # Install firefox.
-  programs.firefox.enable = true;
-
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.permittedInsecurePackages = [ "docker-28.5.2" ];
-
-  # Install flatpak
-  services.flatpak.enable = true;
-
-  # enable v2raya
-  services.v2raya.enable = true;
-  boot.kernelModules = [ "tcp_bbr" ];
-  # Enable nix-ld for running dynamically linked binaries
-  programs.nix-ld.enable = true;
-
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
+  # ─── 系统级软件 ────────────────────────────────────────────
   environment.systemPackages = with pkgs; [
-    # basic
-    gcc gnumake cmake gdb pkg-config qemu nodejs_22 flex bison elfutils.dev elfutils bc perl python3 openssl nasm
-    vim tmux wget git curl unzip unrar
-    
-    # rust
-    cargo
-    rustc
-   
-    # editor
-    vscode
-    
-    # bowsor
-    google-chrome firefox
-    
-    # vpn
-    v2raya clash-verge-rev
-    
-    # fcitx5
-    qt6Packages.fcitx5-configtool
-    fcitx5-gtk # GTK 程序支持
-    
-    # terminal
-    gnome-terminal
+    # 开发工具
+    gcc gnumake cmake gdb pkg-config flex bison bc perl nasm
+    elfutils.dev elfutils
+    qemu python3 nodejs_22 openssl
+    cargo rustc
 
-    # zsh
+    # 编辑器 / 浏览器
+    vim vscode
+    google-chrome firefox
+
+    # 终端 / 实用工具
+    tmux wget git curl unzip unrar
+    gnome-terminal
     zsh-powerlevel10k
 
+    # 网络 / 代理
+    v2raya clash-verge-rev
+
+    # 输入法相关
+    qt6Packages.fcitx5-configtool
+    fcitx5-gtk
   ] ++ [
-    # cc-switch-cli from flake input
+    # 来自 flake input
     inputs.cc-switch-cli.packages.x86_64-linux.default
   ];
 
-  # system vari
-  environment.variables = {
-    # fcitx5 input
-    GTK_IM_MODULE = "fcitx";
-    QT_IM_MODULE = "fcitx";
-    XMODIFIERS = "@im=fcitx";
-  };
-
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
-
-  # List services that you want to enable:
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
-  
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
-
-  system.stateVersion = "25.11"; # Did you read the comment?
+  # ─── 系统版本(设定后不要改)────────────────────────────────
+  system.stateVersion = "25.11";
 }
