@@ -11,9 +11,17 @@
     permittedInsecurePackages = [ "docker-28.5.2" ];
   };
 
-  # ─── 启动 (Boot) ───────────────────────────────────────────
-  boot.loader.systemd-boot.enable = true;
+  # ─── 启动 (Boot: GRUB on UEFI) ────────────────────────────
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.systemd-boot.enable = false;   # 关闭原引导器
+  boot.loader.grub = {
+    enable = true;
+    device = "nodev";          # UEFI 模式(BIOS 模式才填 /dev/sda 之类磁盘)
+    efiSupport = true;
+    useOSProber = true;        # 自动探测其他系统(Windows 等)加入菜单
+    gfxmodeEfi = "2560x1440";  # grub 菜单分辨率(屏幕原生 2K)
+    gfxpayloadEfi = "keep";    # 内核启动后控制台也保持此分辨率
+  };
   boot.kernelModules = [ "tcp_bbr" ];  # 拥塞控制(hardware-configuration.nix 另有 kvm-intel,会自动合并)
 
   # ─── 网络 ──────────────────────────────────────────────────
