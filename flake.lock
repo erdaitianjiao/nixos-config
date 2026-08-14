@@ -43,12 +43,10 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1780952837,
-        "narHash": "sha256-Fwd1+spDtQ0hDyBwme6ufG3n4mY0UrjjFdYHv+G/Hds=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "e820eb4a444b46a19b2e03e8dfd2359439ff30fe",
-        "type": "github"
+        "lastModified": 1782901010,
+        "narHash": "sha256-IWpaImuKa1YVOmnuPyyzbG6/Q6ZgKaOsP4sXmfTbkdQ=",
+        "type": "tarball",
+        "url": "https://mirrors.ustc.edu.cn/nix-channels/nixos-25.11/nixexprs.tar.xz"
       },
       "original": {
         "owner": "NixOS",

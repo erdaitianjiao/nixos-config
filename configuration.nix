@@ -23,13 +23,22 @@
     gfxpayloadEfi = "keep";    # 内核启动后控制台也保持此分辨率
   };
   boot.kernelModules = [ "tcp_bbr" ];  # 拥塞控制(hardware-configuration.nix 另有 kvm-intel,会自动合并)
+  # 内核 IPv4 转发 —— Docker 容器上网必需。默认 0 会导致容器 DNS 解析 / TCP 连接全部失败。
+  boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
 
   # ─── 网络 ──────────────────────────────────────────────────
   networking.hostName = "nixos";
   networking.networkmanager.enable = true;
   networking.firewall = {
+    trustedInterfaces = [ "docker0" ];  # 信任 docker 默认网桥, 放行容器出站流量
     allowedTCPPorts = [ 53317 ];  # LocalSend
     allowedUDPPorts = [ 53317 ];
+    # 局域网全部放行
+    extraCommands = ''
+      iptables -I nixos-fw -s 10.0.0.0/8 -j ACCEPT
+      iptables -I nixos-fw -s 172.16.0.0/12 -j ACCEPT
+      iptables -I nixos-fw -s 192.168.0.0/16 -j ACCEPT
+    '';
   };
 
   # ─── 时间 & 语言 ───────────────────────────────────────────
@@ -109,6 +118,8 @@
 
   # ─── 虚拟化 (Docker) ───────────────────────────────────────
   virtualisation.docker.enable = true;
+  # 给容器固定 DNS (国内), 不依赖宿主机 resolv.conf, 避免局域网 DNS 不可达时容器解析失败
+  virtualisation.docker.daemon.settings.dns = [ "223.5.5.5" "114.114.114.114" ];
 
   # ─── Shell (Zsh + Oh My Zsh + powerlevel10k) ───────────────
   programs.zsh = {
