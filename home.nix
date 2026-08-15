@@ -15,8 +15,6 @@
     ripgrep              # rg
     # 音乐
     go-musicfox          # 网易云 TUI 客户端
-    # 游戏(unfree)
-    steam
     # 通讯(unfree,腾讯官方 Linux 版)
     wechat
   ];

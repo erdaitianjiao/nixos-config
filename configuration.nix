@@ -6,9 +6,13 @@
   # ─── Nix 设置 ───────────────────────────────────────────────
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
+  # 自动清理旧代际 / 优化 store(避免磁盘越来越满)
+  nix.gc.automatic = true;
+  nix.gc.options = "--delete-older-than 14d";
+  nix.optimise.automatic = true;
+
   nixpkgs.config = {
     allowUnfree = true;
-    permittedInsecurePackages = [ "docker-28.5.2" ];
   };
 
   # ─── 启动 (Boot: GRUB on UEFI) ────────────────────────────
@@ -25,6 +29,9 @@
   boot.kernelModules = [ "tcp_bbr" ];  # 拥塞控制(hardware-configuration.nix 另有 kvm-intel,会自动合并)
   # 内核 IPv4 转发 —— Docker 容器上网必需。默认 0 会导致容器 DNS 解析 / TCP 连接全部失败。
   boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
+  # BBR 拥塞控制:加载模块只是第一步,还要切换算法 + 配合 fq 队列才真正生效
+  boot.kernel.sysctl."net.ipv4.tcp_congestion_control" = "bbr";
+  boot.kernel.sysctl."net.core.default_qdisc" = "fq";
 
   # ─── 网络 ──────────────────────────────────────────────────
   networking.hostName = "nixos";
@@ -118,6 +125,8 @@
 
   # ─── 虚拟化 (Docker) ───────────────────────────────────────
   virtualisation.docker.enable = true;
+  # docker 28.x 已停维护被 nixpkgs 标为不安全,改用 29.x(docker_29)
+  virtualisation.docker.package = pkgs.docker_29;
   # 给容器固定 DNS (国内), 不依赖宿主机 resolv.conf, 避免局域网 DNS 不可达时容器解析失败
   virtualisation.docker.daemon.settings.dns = [ "223.5.5.5" "114.114.114.114" ];
 
@@ -127,7 +136,6 @@
     ohMyZsh = {
       enable = true;
       plugins = [ "git" "sudo" ];
-      theme = "powerlevel10k/powerlevel10k";
     };
     syntaxHighlighting.enable = true;
     autosuggestions.enable = true;
@@ -138,12 +146,13 @@
   # ─── 程序 ──────────────────────────────────────────────────
   programs.firefox.enable = true;
   programs.nix-ld.enable = true;  # 运行动态链接的二进制
+  programs.steam.enable = true;   # Steam: FHS + 32 位库(home.nix 里的 steam 包已移到这里)
 
   # ─── 用户 & home-manager ───────────────────────────────────
   users.users.tianjiao = {
     isNormalUser = true;
     description = "tianjiao";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" ];
     shell = pkgs.zsh;
     packages = with pkgs; [ kdePackages.kate ];
   };
@@ -165,7 +174,7 @@
 
     # 编辑器 / 浏览器
     vim vscode
-    google-chrome firefox
+    google-chrome
 
     # 终端 / 实用工具
     tmux wget git curl unzip unrar
