@@ -130,6 +130,27 @@
   # 给容器固定 DNS (国内), 不依赖宿主机 resolv.conf, 避免局域网 DNS 不可达时容器解析失败
   virtualisation.docker.daemon.settings.dns = [ "223.5.5.5" "114.114.114.114" ];
 
+  # ─── NVIDIA 独显 (RTX 4050 Laptop + Intel 核显混合) ────────
+  services.xserver.videoDrivers = [ "nvidia" ];
+  hardware.nvidia = {
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    modesetting.enable = true;
+    open = true;                     # Ada 架构 (4050) 推荐 open 内核模块
+    nvidiaPersistenced = true;
+    powerManagement.enable = true;   # 笔记本空闲时给独显断电, 省电
+    prime = {
+      offload.enable = true;         # 核显输出画面, N 卡按需启用 (CUDA 可用)
+      intelBusId = "PCI:0:2:0";
+      nvidiaBusId = "PCI:1:0:0";
+    };
+  };
+
+  # ─── Ollama (本地大模型, N 卡 CUDA 加速) ───────────────────
+  services.ollama = {
+    enable = true;
+    acceleration = "cuda";
+  };
+
   # ─── Shell (Zsh + Oh My Zsh + powerlevel10k) ───────────────
   programs.zsh = {
     enable = true;
