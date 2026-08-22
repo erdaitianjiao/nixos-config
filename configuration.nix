@@ -37,6 +37,8 @@ in {
   };
 
   # ─── 启动 (Boot: GRUB on UEFI) ────────────────────────────
+  # upstream 分支主动跟随 Nixpkgs 提供的最新主线内核；stable 分支使用默认 LTS。
+  boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.enable = false;   # 关闭原引导器
   boot.loader.grub = {
