@@ -42,7 +42,11 @@
   };
 
   # fcitx5-rime 自带的空 default.yaml 会覆盖词库包中的同名文件，
-  # 因此显式选择雾凇方案，确保 Rime 部署时生成中文 schema。
+  # 因此恢复雾凇的完整默认配置，并显式选择雾凇方案。
+  xdg.dataFile."fcitx5/rime/default.yaml" = {
+    force = true;
+    source = "${pkgs.rime-ice.src}/default.yaml";
+  };
   xdg.dataFile."fcitx5/rime/default.custom.yaml" = {
     force = true;
     text = ''
@@ -63,5 +67,6 @@
     "$kwrite" --file plasmarc --group Theme --key name Layan
     "$kwrite" --file kwinrc --group org.kde.kdecoration2 --key library org.kde.kwin.aurorae.v2
     "$kwrite" --file kwinrc --group org.kde.kdecoration2 --key theme __aurorae__svg__WhiteSur
+    "$kwrite" --file baloofilerc --group "Basic Settings" --key "Indexing-Enabled" false
   '';
 }
