@@ -1,12 +1,8 @@
 # NixOS 系统级配置 —— 桌面 / 服务 / 网络 / 系统软件
 # 用户级配置(个人软件 / dotfiles)见 home.nix
-{ inputs, config, pkgs, ... }:
+{ config, pkgs, ... }:
 
 let
-  unstablePkgs = import inputs.nixpkgs-unstable {
-    system = pkgs.stdenv.hostPlatform.system;
-    config.allowUnfree = true;
-  };
   cc-switch-src = pkgs.fetchurl {
     url = "https://github.com/farion1231/cc-switch/releases/download/v3.20.0/CC-Switch-v3.20.0-Linux-x86_64.AppImage";
     hash = "sha256-+n1jUljSAPPuQ6nyYWc/JXd7VcPEOinUiNF6Dbxlx7Q=";
@@ -177,7 +173,7 @@ in {
   # ─── Ollama (本地大模型, N 卡 CUDA 加速) ───────────────────
   services.ollama = {
     enable = true;
-    acceleration = "cuda";
+    package = pkgs.ollama-cuda;
   };
 
   # ─── Shell (Zsh + Oh My Zsh + powerlevel10k) ───────────────
@@ -234,7 +230,7 @@ in {
 
     # 网络 / 代理
     v2raya
-    unstablePkgs.clash-verge-rev
+    clash-verge-rev
 
     # 输入法相关
     qt6Packages.fcitx5-configtool
@@ -243,7 +239,6 @@ in {
     # KDE 全局主题（与当前电脑一致）
     tela-icon-theme
     whitesur-kde
-    layan-gtk-theme
   ];
 
   # ─── 系统版本(设定后不要改)────────────────────────────────
