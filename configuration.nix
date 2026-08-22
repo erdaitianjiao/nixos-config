@@ -2,7 +2,32 @@
 # 用户级配置(个人软件 / dotfiles)见 home.nix
 { inputs, config, pkgs, ... }:
 
-{
+let
+  unstablePkgs = import inputs.nixpkgs-unstable {
+    system = pkgs.stdenv.hostPlatform.system;
+    config.allowUnfree = true;
+  };
+  cc-switch-src = pkgs.fetchurl {
+    url = "https://github.com/farion1231/cc-switch/releases/download/v3.20.0/CC-Switch-v3.20.0-Linux-x86_64.AppImage";
+    hash = "sha256-+n1jUljSAPPuQ6nyYWc/JXd7VcPEOinUiNF6Dbxlx7Q=";
+  };
+  cc-switch-contents = pkgs.appimageTools.extractType2 {
+    pname = "cc-switch";
+    version = "3.20.0";
+    src = cc-switch-src;
+  };
+  cc-switch = pkgs.appimageTools.wrapType2 {
+    pname = "cc-switch";
+    version = "3.20.0";
+    src = cc-switch-src;
+    extraInstallCommands = ''
+      install -m 444 -D "${cc-switch-contents}/CC Switch.desktop" \
+        $out/share/applications/cc-switch.desktop
+      install -m 444 -D ${cc-switch-contents}/cc-switch.png \
+        $out/share/pixmaps/cc-switch.png
+    '';
+  };
+in {
   # ─── Nix 设置 ───────────────────────────────────────────────
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
@@ -66,8 +91,12 @@
 
   # ─── 输入法 (Fcitx5) ───────────────────────────────────────
   i18n.inputMethod = {
-    enabled = "fcitx5";
-    fcitx5.addons = with pkgs; [ qt6Packages.fcitx5-chinese-addons ];
+    enable = true;
+    type = "fcitx5";
+    fcitx5.addons = with pkgs; [
+      qt6Packages.fcitx5-chinese-addons
+      (fcitx5-rime.override { rimeDataPkgs = [ rime-ice ]; })
+    ];
   };
   environment.variables = {
     GTK_IM_MODULE = "fcitx";
@@ -196,6 +225,7 @@
     # 编辑器 / 浏览器
     vim vscode
     google-chrome
+    cc-switch
 
     # 终端 / 实用工具
     tmux wget git curl unzip unrar
@@ -203,14 +233,17 @@
     zsh-powerlevel10k
 
     # 网络 / 代理
-    v2raya clash-verge-rev
+    v2raya
+    unstablePkgs.clash-verge-rev
 
     # 输入法相关
     qt6Packages.fcitx5-configtool
     fcitx5-gtk
-  ] ++ [
-    # 来自 flake input
-    inputs.cc-switch-cli.packages.x86_64-linux.default
+
+    # KDE 全局主题（与当前电脑一致）
+    tela-icon-theme
+    whitesur-kde
+    layan-gtk-theme
   ];
 
   # ─── 系统版本(设定后不要改)────────────────────────────────
