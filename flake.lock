@@ -1,25 +1,5 @@
 {
   "nodes": {
-    "cc-switch-cli": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1781118468,
-        "narHash": "sha256-2WhBuUJc+T+sbfECFj/4Ruj6aCBy+taNVjQ3vK+NLtw=",
-        "owner": "SaladDay",
-        "repo": "cc-switch-cli",
-        "rev": "663174ff794ff24207f50d6aef2419d52495d468",
-        "type": "github"
-      },
-      "original": {
-        "owner": "SaladDay",
-        "repo": "cc-switch-cli",
-        "type": "github"
-      }
-    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -57,11 +37,27 @@
         "type": "github"
       }
     },
+    "nixpkgs-unstable": {
+      "locked": {
+        "lastModified": 1787135253,
+        "narHash": "sha256-RD2kNWCG+Bjo6h+JVjWVNntZs2GtRoeY2xHjts/FNkA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "ffb3c9b700e759be2ef13237c9d8f953b32a1e46",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
-        "cc-switch-cli": "cc-switch-cli",
         "home-manager": "home-manager",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "nixpkgs-unstable": "nixpkgs-unstable"
       }
     }
   },
