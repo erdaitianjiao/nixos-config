@@ -41,6 +41,17 @@
     '';
   };
 
+  # fcitx5-rime 自带的空 default.yaml 会覆盖词库包中的同名文件，
+  # 因此显式选择雾凇方案，确保 Rime 部署时生成中文 schema。
+  xdg.dataFile."fcitx5/rime/default.custom.yaml" = {
+    force = true;
+    text = ''
+      patch:
+        schema_list:
+          - schema: rime_ice
+    '';
+  };
+
   # KDE Plasma 外观：Breeze Light + Tela + Layan + WhiteSur。
   # 用 kwriteconfig6 写入各应用共同读取的 KDE 全局配置。
   home.activation.kdeGlobalTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
