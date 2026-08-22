@@ -172,12 +172,6 @@ in {
     };
   };
 
-  # ─── Ollama (本地大模型, N 卡 CUDA 加速) ───────────────────
-  services.ollama = {
-    enable = true;
-    package = pkgs.ollama-cuda;
-  };
-
   # ─── Shell (Zsh + Oh My Zsh + powerlevel10k) ───────────────
   programs.zsh = {
     enable = true;
