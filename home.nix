@@ -41,6 +41,15 @@
     '';
   };
 
+  # 在候选窗中显示正在输入的拼音编码。
+  xdg.configFile."fcitx5/conf/rime.conf" = {
+    force = true;
+    text = ''
+      PreeditMode="Composing text"
+      PreeditCursorPositionAtBeginning=False
+    '';
+  };
+
   # fcitx5-rime 自带的空 default.yaml 会覆盖词库包中的同名文件，
   # 因此恢复雾凇的完整默认配置，并显式选择雾凇方案。
   xdg.dataFile."fcitx5/rime/default.yaml" = {
@@ -62,11 +71,12 @@
     kwrite="${pkgs.kdePackages.kconfig}/bin/kwriteconfig6"
     "$kwrite" --file kdeglobals --group General --key ColorScheme BreezeLight
     "$kwrite" --file kdeglobals --group KDE --key widgetStyle Breeze
+    "$kwrite" --file kdeglobals --group KDE --key LookAndFeelPackage com.github.vinceliuice.Layan
     "$kwrite" --file kdeglobals --group Icons --key Theme Tela
     "$kwrite" --file kcminputrc --group Mouse --key cursorTheme Breeze_Light
     "$kwrite" --file plasmarc --group Theme --key name Layan
     "$kwrite" --file kwinrc --group org.kde.kdecoration2 --key library org.kde.kwin.aurorae.v2
-    "$kwrite" --file kwinrc --group org.kde.kdecoration2 --key theme __aurorae__svg__WhiteSur
+    "$kwrite" --file kwinrc --group org.kde.kdecoration2 --key theme __aurorae__svg__Layan
     "$kwrite" --file baloofilerc --group "Basic Settings" --key "Indexing-Enabled" false
   '';
 }
