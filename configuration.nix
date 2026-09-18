@@ -27,6 +27,13 @@ in {
   # ─── Nix 设置 ───────────────────────────────────────────────
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
+  # 国内镜像加速(否则 cache.nixos.org 拉包很慢)
+  nix.settings.substituters = [
+    "https://mirrors.ustc.edu.cn/nix-channels/store"
+    "https://mirror.sjtu.edu.cn/nix-channels/store"
+    "https://cache.nixos.org"
+  ];
+
   # 自动清理旧代际 / 优化 store(避免磁盘越来越满)
   nix.gc.automatic = true;
   nix.gc.options = "--delete-older-than 14d";
@@ -115,6 +122,8 @@ in {
     nerd-fonts.meslo-lg
     nerd-fonts.fira-code
     nerd-fonts.jetbrains-mono
+    nerd-fonts.caskaydia-cove   # CaskaydiaCove Nerd Font（niri/kitty 配置用）
+    nerd-fonts._0xproto         # 0xProto Nerd Font（waybar 用）
   ];
   fonts.fontconfig = {
     enable = true;
@@ -134,6 +143,11 @@ in {
   services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
 
+  # ─── niri 会话（Wayland，SDDM 里可选；不影响 Plasma）────────────
+  programs.niri.enable = true;
+  # 默认仍进 Plasma；登录界面会话菜单里可选 Niri
+  services.displayManager.defaultSession = pkgs.lib.mkForce "plasma";
+
   # ─── 声音 (PipeWire) ───────────────────────────────────────
   services.pulseaudio.enable = false;
   security.rtkit.enable = true;
@@ -146,6 +160,7 @@ in {
 
   # ─── 服务 ──────────────────────────────────────────────────
   services.openssh.enable = true;     # SSH
+  services.udev.packages = [ pkgs.brightnessctl ];  # 允许普通用户调亮度
   services.printing.enable = true;    # 打印 (CUPS)
   services.flatpak.enable = true;     # Flatpak
   services.v2raya.enable = true;      # 代理
@@ -194,7 +209,7 @@ in {
   users.users.tianjiao = {
     isNormalUser = true;
     description = "tianjiao";
-    extraGroups = [ "networkmanager" "wheel" "docker" ];
+    extraGroups = [ "networkmanager" "wheel" "docker" "video" ];
     shell = pkgs.zsh;
     packages = with pkgs; [ kdePackages.kate ];
   };
@@ -226,7 +241,13 @@ in {
 
     # 网络 / 代理
     v2raya
-    clash-verge-rev
+    # AI 编码工具
+    opencode
+    # 音视频处理
+    ffmpeg
+    # 文件系统工具
+    e2fsprogs
+    # clash-verge-rev 改由下方 programs.clash-verge 模块管理（支持服务模式/TUN）
 
     # 输入法相关
     qt6Packages.fcitx5-configtool
@@ -235,7 +256,17 @@ in {
     # KDE 全局主题（与当前电脑一致）
     tela-icon-theme
     whitesur-kde
+
+    # niri 桌面 / 状态栏 / 启动器 / 通知 / 工具
+    niri kitty waybar fuzzel mako swaybg swaylock
+    brightnessctl playerctl wl-clipboard pavucontrol xwayland-satellite
   ];
+
+  # ─── Clash Verge（服务模式，TUN / 系统代理 / DNS 接管必需）────────
+  programs.clash-verge = {
+    enable = true;
+    serviceMode = true; # 用 nix 声明 clash-verge-service systemd 服务，GUI 里直接开 TUN 即可
+  };
 
   # ─── 系统版本(设定后不要改)────────────────────────────────
   system.stateVersion = "25.11";
