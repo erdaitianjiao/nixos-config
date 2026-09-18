@@ -102,9 +102,6 @@ layer-rule {
 layer-rule {
     match namespace="^notifications$"
     geometry-corner-radius 12
-    background-effect {
-        blur true
-    }
 }
 
 // 截图保存位置
