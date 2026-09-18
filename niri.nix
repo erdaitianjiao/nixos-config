@@ -12,7 +12,33 @@ let
 
   assets = ./assets/niri;
   exe = name: { source = "${assets}/scripts/${name}"; executable = true; };
+
+  # slider-popup（点击弹滑块）需要的 Python + PyGObject 环境
+  pythonEnv = pkgs.python3.withPackages (ps: [ ps.pygobject3 ]);
+
+  # 用 wrapGAppsHook4 自动收集 GTK4/Graphene/cairo 等所有 GI typelib
+  sliderPopup = pkgs.stdenv.mkDerivation {
+    pname = "niri-slider-popup";
+    version = "1";
+    dontUnpack = true;
+
+    nativeBuildInputs = [ pkgs.wrapGAppsHook4 pkgs.gobject-introspection pkgs.makeWrapper ];
+    buildInputs = [ pythonEnv pkgs.gtk4 ];
+
+    preFixup = ''
+      gappsWrapperArgs+=(
+        --prefix PATH : ${lib.makeBinPath [ pythonEnv pkgs.ddcutil pkgs.brightnessctl pkgs.wireplumber ]}
+      )
+    '';
+
+    installPhase = ''
+      mkdir -p $out/bin
+      install -m755 ${assets}/scripts/slider-popup $out/bin/slider-popup
+    '';
+  };
 in {
+  home.packages = [ sliderPopup ];
+
   xdg.configFile = {
     # ── 各程序配置（跟随主题）──
     "niri/config.kdl".source     = "${assets}/${theme}/config.kdl";
@@ -29,6 +55,15 @@ in {
     "waybar/bluetooth-menu.sh"   = exe "bluetooth-menu.sh";
     "waybar/bluetooth-toggle.sh" = exe "bluetooth-toggle.sh";
     "waybar/powermenu.sh"        = exe "powermenu.sh";
+
+    # 音量/亮度点击弹窗滑块（转到 wrapGAppsHook 包装好的程序）
+    "waybar/slider-popup" = {
+      executable = true;
+      text = ''
+        #!${pkgs.bash}/bin/bash
+        exec ${sliderPopup}/bin/slider-popup "$@"
+      '';
+    };
 
     # ── 壁纸 ──
     "niri/wallpapers/matcha.png".source      = "${assets}/wallpapers/matcha.png";

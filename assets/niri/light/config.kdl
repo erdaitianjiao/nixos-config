@@ -75,6 +75,15 @@ window-rule {
     }
 }
 
+// 音量/亮度弹窗滑块：浮动 + 固定到右上角（waybar 下方）
+window-rule {
+    match app-id="SliderPopup"
+    open-floating true
+    default-floating-position x=8 y=42 relative-to="top-right"
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
 // 给启动器 / 状态栏 / 通知加毛玻璃
 layer-rule {
     match namespace="^launcher$"
@@ -124,8 +133,8 @@ animations {
 
 // 全局模糊参数（配合上面的 background-effect 使用）
 blur {
-    passes 3
-    offset 3
+    passes 1
+    offset 1
     noise 0.02
     saturation 1.5
 }
