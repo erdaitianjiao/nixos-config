@@ -84,6 +84,12 @@ window-rule {
     clip-to-geometry true
 }
 
+// QQ / 微信 弹窗（含新消息提示）浮动，避免被平铺或被挤出屏幕
+window-rule {
+    match app-id="^(QQ|wechat|weixin)$"
+    open-floating true
+}
+
 // 给启动器 / 状态栏 / 通知加毛玻璃
 layer-rule {
     match namespace="^launcher$"
