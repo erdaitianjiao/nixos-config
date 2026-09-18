@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
-# WiFi 菜单：选网络 → 有密码就弹密码框 → 连接
+# WiFi 菜单：选网络 → 需要密码就弹小输入框 → 连接
 set -euo pipefail
+
+notify() { command -v notify-send >/dev/null 2>&1 && notify-send -a WiFi "$1" "${2:-}" || true; }
+
+prompt_pass() {
+    # --prompt-only：dmenu 模式下不读 stdin、lines=0，只留一行输入框
+    fuzzel --dmenu --password --prompt-only="密码 $1: " --width=32
+}
 
 nmcli device wifi rescan >/dev/null 2>&1 &
 sleep 1.5
 
-# 读取网络列表：SSID:SIGNAL:SECURITY（按信号强度排序）
 mapfile -t lines < <(nmcli -t -f SSID,SIGNAL,SECURITY device wifi list 2>/dev/null)
 
 # 去重（同名只留信号最强的那个）
@@ -33,18 +39,33 @@ esac
 if [ "$choice" = "🔒 连接隐藏网络" ]; then
     ssid="$(fuzzel --dmenu --prompt-only='网络名 (SSID): ' --width=32)"
     [ -z "$ssid" ] && exit 0
-    pass="$(fuzzel --dmenu --password --prompt-only="密码 $ssid: " --width=32)"
+    pass="$(prompt_pass "$ssid")"
     [ -z "$pass" ] && exit 0
-    nmcli device wifi connect "$ssid" password "$pass"
-    exit $?
+    if nmcli device wifi connect "$ssid" password "$pass" >/dev/null 2>&1; then
+        notify "已连接" "$ssid"
+    else
+        notify "连接失败" "$ssid"
+    fi
+    exit 0
 fi
 
 ssid="${choice%% (*}"
 
-# 已经保存过密码的连接：直接连
+# 已保存的连接：直接连；失败（比如密码变了）就弹密码框重连
 if nmcli -t -f NAME connection show 2>/dev/null | grep -qxF "$ssid"; then
-    nmcli connection up "$ssid"
-    exit $?
+    if nmcli connection up "$ssid" >/dev/null 2>&1; then
+        notify "已连接" "$ssid"
+    else
+        pass="$(prompt_pass "$ssid")"
+        if [ -n "$pass" ]; then
+            if nmcli device wifi connect "$ssid" password "$pass" >/dev/null 2>&1; then
+                notify "已连接" "$ssid"
+            else
+                notify "连接失败" "$ssid"
+            fi
+        fi
+    fi
+    exit 0
 fi
 
 # 查这个网络是否需要密码
@@ -55,11 +76,19 @@ for line in "${lines[@]}"; do
 done
 
 if [ -n "$sec" ]; then
-    # 加密网络：弹密码框
-    pass="$(fuzzel --dmenu --password --prompt-only="密码 $ssid: " --width=32)"
+    # 加密网络：弹小密码框
+    pass="$(prompt_pass "$ssid")"
     [ -z "$pass" ] && exit 0
-    nmcli device wifi connect "$ssid" password "$pass"
+    if nmcli device wifi connect "$ssid" password "$pass" >/dev/null 2>&1; then
+        notify "已连接" "$ssid"
+    else
+        notify "连接失败（密码错误？）" "$ssid"
+    fi
 else
     # 开放网络：直接连
-    nmcli device wifi connect "$ssid"
+    if nmcli device wifi connect "$ssid" >/dev/null 2>&1; then
+        notify "已连接" "$ssid"
+    else
+        notify "连接失败" "$ssid"
+    fi
 fi
