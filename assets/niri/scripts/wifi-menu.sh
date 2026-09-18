@@ -31,9 +31,9 @@ esac
 
 # 隐藏网络：手动输入 SSID + 密码
 if [ "$choice" = "🔒 连接隐藏网络" ]; then
-    ssid="$(fuzzel --dmenu --prompt '网络名 (SSID) ')"
+    ssid="$(fuzzel --dmenu --prompt-only='网络名 (SSID): ' --width=32)"
     [ -z "$ssid" ] && exit 0
-    pass="$(fuzzel --dmenu --password --prompt "密码：$ssid ")"
+    pass="$(fuzzel --dmenu --password --prompt-only="密码 $ssid: " --width=32)"
     [ -z "$pass" ] && exit 0
     nmcli device wifi connect "$ssid" password "$pass"
     exit $?
@@ -56,7 +56,7 @@ done
 
 if [ -n "$sec" ]; then
     # 加密网络：弹密码框
-    pass="$(fuzzel --dmenu --password --prompt "密码：$ssid ")"
+    pass="$(fuzzel --dmenu --password --prompt-only="密码 $ssid: " --width=32)"
     [ -z "$pass" ] && exit 0
     nmcli device wifi connect "$ssid" password "$pass"
 else
