@@ -145,6 +145,7 @@ in {
 
   # ─── niri 会话（Wayland，SDDM 里可选；不影响 Plasma）────────────
   programs.niri.enable = true;
+  hardware.i2c.enable = true;   # ddcutil 调外接屏亮度需要 i2c
   # 默认仍进 Plasma；登录界面会话菜单里可选 Niri
   services.displayManager.defaultSession = pkgs.lib.mkForce "plasma";
 
@@ -259,7 +260,7 @@ in {
 
     # niri 桌面 / 状态栏 / 启动器 / 通知 / 工具
     niri kitty waybar fuzzel mako swaybg swaylock
-    brightnessctl playerctl wl-clipboard pavucontrol xwayland-satellite
+    brightnessctl playerctl wl-clipboard pavucontrol xwayland-satellite ddcutil
   ];
 
   # ─── Clash Verge（服务模式，TUN / 系统代理 / DNS 接管必需）────────
