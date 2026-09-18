@@ -11,7 +11,7 @@
 
   "modules-left":   ["niri/workspaces", "niri/window"],
   "modules-center": ["clock"],
-  "modules-right":  ["tray", "network", "bluetooth", "pulseaudio", "pulseaudio/slider", "backlight", "backlight/slider", "battery", "custom/power"],
+  "modules-right":  ["tray", "network", "bluetooth", "pulseaudio", "backlight", "battery", "custom/power"],
 
   // ── 工作区 ─────────────────────────────────────────
   "niri/workspaces": {
@@ -74,33 +74,21 @@
     "format-icons": {
       "default": ["󰕿", "󰖀", "󰕾"]
     },
-    "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on-click": "~/.config/waybar/slider-popup volume",
     "on-click-right": "pavucontrol",
+    "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+",
+    "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-",
     "tooltip-format": "{desc}"
   },
 
-  // 音量拖拽滑块
-  "pulseaudio/slider": {
-    "min": 0,
-    "max": 100,
-    "orientation": "horizontal"
-  },
-
-  // ── 亮度 ───────────────────────────────────────────
+  // ── 亮度（点击弹滑块；左键=内置，右键=外接 ddcutil）──
   "backlight": {
     "device": "nvidia_wmi_ec_backlight",
     "format": "{icon} {percent}%",
     "format-icons": ["󰃝", "󰃞", "󰃟", "󰃠"],
+    "on-click": "~/.config/waybar/slider-popup brightness",
     "on-scroll-up": "brightnessctl set +5%",
     "on-scroll-down": "brightnessctl set 5%-"
-  },
-
-  // 亮度拖拽滑块
-  "backlight/slider": {
-    "min": 0,
-    "max": 100,
-    "orientation": "horizontal",
-    "device": "nvidia_wmi_ec_backlight"
   },
 
   // ── 电池 ───────────────────────────────────────────
