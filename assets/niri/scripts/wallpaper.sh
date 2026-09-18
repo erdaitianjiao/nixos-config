@@ -21,7 +21,7 @@ fi
 # 当前壁纸：优先读状态文件，其次从 swaybg 进程参数里取
 cur="$(cat "$state" 2>/dev/null || true)"
 if [ -z "$cur" ] || [ ! -f "$cur" ]; then
-    cur="$(pgrep -a swaybg 2>/dev/null | sed -n 's/.*swaybg -i \([^ ]*\).*/\1/p' | head -1)"
+    cur="$(pgrep -a swaybg 2>/dev/null | sed -n 's/.*swaybg -i \([^ ]*\).*/\1/p' | head -1 || true)"
 fi
 
 # 在列表里定位当前壁纸
