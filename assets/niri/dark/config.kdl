@@ -1,0 +1,293 @@
+// ╭──────────────────────────────────────────────╮
+// │  niri config — Tokyo Night                   │
+// │  Docs: https://niri-wm.github.io/niri/       │
+// ╰──────────────────────────────────────────────╯
+
+// ── 输入设备 ─────────────────────────────────────────
+input {
+    keyboard {
+        xkb {
+            // 留空则跟随系统 locale1 设置（可用 localectl 修改）
+            // 中文输入建议装 fcitx5，然后用 fcitx5 的输入法切换快捷键
+            // layout "us"
+            // options "caps:escape"
+        }
+    }
+
+    touchpad {
+        tap
+        natural-scroll
+        accel-speed 0.3
+    }
+
+    mouse {
+        accel-speed 0.3
+    }
+
+    // 鼠标移入窗口时自动聚焦（只对完整可见的窗口生效）
+    focus-follows-mouse max-scroll-amount="0%"
+}
+
+// ── 显示器位置（上下排列）────────────────────────────
+// DP-2 外接屏在上，eDP-1 笔记本屏在下
+// ── 布局 ─────────────────────────────────────────────
+layout {
+    gaps 8
+    center-focused-column "on-overflow"
+
+    default-column-width { proportion 0.5; }
+
+    // 用 border 代替 focus-ring，更简洁
+    focus-ring {
+        off
+    }
+
+    border {
+        width 2
+        active-color "#7aa2f7"   // Tokyo Night blue
+        inactive-color "#3b4261" // 暗蓝灰
+        urgent-color "#f7768e"   // red
+    }
+
+    shadow {
+        on
+        softness 24
+        spread 4
+        offset x=0 y=4
+        color "#00000066"
+    }
+}
+
+// 请求客户端去掉自带标题栏，边框/圆角更干净（个别应用不理会则忽略）
+prefer-no-csd
+
+// 所有窗口统一圆角（经典 border + 圆角 方案）
+window-rule {
+    geometry-corner-radius 10
+    clip-to-geometry true
+}
+
+// 毛玻璃：kitty 半透明时模糊背景
+window-rule {
+    match app-id="^kitty$"
+    background-effect {
+        blur true
+    }
+}
+
+// 给启动器 / 状态栏 / 通知加毛玻璃
+layer-rule {
+    match namespace="^launcher$"
+    geometry-corner-radius 14
+    background-effect {
+        blur true
+    }
+}
+layer-rule {
+    match namespace="^waybar$"
+    geometry-corner-radius 12
+    background-effect {
+        blur true
+    }
+}
+layer-rule {
+    match namespace="^notifications$"
+    geometry-corner-radius 12
+    background-effect {
+        blur true
+    }
+}
+
+// 截图保存位置
+screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
+
+// ── 输入法环境变量（fcitx5 + 雾凇拼音）───────────────
+environment {
+    GTK_IM_MODULE "fcitx"
+    QT_IM_MODULE "fcitx"
+    XMODIFIERS "@im=fcitx"
+}
+
+// ── 开机自启 ─────────────────────────────────────────
+spawn-at-startup "fcitx5" "-d"
+spawn-at-startup "waybar"
+// 壁纸（从 ~/entertaiment/picture 随机选一张）
+spawn-sh-at-startup "~/.config/niri/wallpaper.sh"
+// 通知守护进程（装了 mako 才会启动）
+spawn-sh-at-startup "command -v mako >/dev/null && mako"
+
+// ── 动画 / 毛玻璃 ─────────────────────────────────────
+animations {
+    // 喜欢更慢/更流畅可取消注释
+    // slowdown 1.5
+}
+
+// 全局模糊参数（配合上面的 background-effect 使用）
+blur {
+    passes 3
+    offset 3
+    noise 0.02
+    saturation 1.5
+}
+
+// 启动时不弹出那个丑丑的快捷键提示
+hotkey-overlay {
+    skip-at-startup
+}
+
+// ── 快捷键 ───────────────────────────────────────────
+binds {
+    // 快捷键速查（fuzzel 主题化版，替代自带 overlay）
+    Mod+Shift+Slash { spawn-sh "~/.config/niri/keybinds.sh"; }
+
+    // ── 启动应用 ──
+    Mod+Return { spawn "kitty"; }
+    Mod+T      { spawn "kitty"; }
+    Mod+D      { spawn "fuzzel"; }
+    Super+Alt+L allow-when-locked=true { spawn "swaylock"; }
+    Mod+Shift+W { spawn-sh "~/.config/niri/wallpaper.sh next"; }
+    Mod+Shift+S { spawn-sh "~/.config/niri/wallpaper.sh prev"; }
+
+    // ── 窗口焦点 ──
+    Mod+Q repeat=false { close-window; }
+    Mod+O repeat=false { toggle-overview; }
+
+    Mod+Left  { focus-column-left; }
+    Mod+Down  { focus-window-down; }
+    Mod+Up    { focus-window-up; }
+    Mod+Right { focus-column-right; }
+    Mod+H     { focus-column-left; }
+    Mod+J     { focus-window-down; }
+    Mod+K     { focus-window-up; }
+    Mod+L     { focus-column-right; }
+
+    // ── 移动窗口 ──
+    Mod+Ctrl+Left  { move-column-left; }
+    Mod+Ctrl+Down  { move-window-down; }
+    Mod+Ctrl+Up    { move-window-up; }
+    Mod+Ctrl+Right { move-column-right; }
+    Mod+Ctrl+H     { move-column-left; }
+    Mod+Ctrl+J     { move-window-down; }
+    Mod+Ctrl+K     { move-window-up; }
+    Mod+Ctrl+L     { move-column-right; }
+
+    Mod+Home { focus-column-first; }
+    Mod+End  { focus-column-last; }
+    Mod+Ctrl+Home { move-column-to-first; }
+    Mod+Ctrl+End  { move-column-to-last; }
+
+    // ── 多显示器 ──
+    Mod+Shift+Left  { focus-monitor-left; }
+    Mod+Shift+Down  { focus-monitor-down; }
+    Mod+Shift+Up    { focus-monitor-up; }
+    Mod+Shift+Right { focus-monitor-right; }
+    Mod+Shift+H     { focus-monitor-left; }
+    Mod+Shift+J     { focus-monitor-down; }
+    Mod+Shift+K     { focus-monitor-up; }
+    Mod+Shift+L     { focus-monitor-right; }
+
+    Mod+Shift+Ctrl+Left  { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+Down  { move-column-to-monitor-down; }
+    Mod+Shift+Ctrl+Up    { move-column-to-monitor-up; }
+    Mod+Shift+Ctrl+Right { move-column-to-monitor-right; }
+    Mod+Shift+Ctrl+H     { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+J     { move-column-to-monitor-down; }
+    Mod+Shift+Ctrl+K     { move-column-to-monitor-up; }
+    Mod+Shift+Ctrl+L     { move-column-to-monitor-right; }
+
+    // ── 工作区 ──
+    Mod+Page_Down      { focus-workspace-down; }
+    Mod+Page_Up        { focus-workspace-up; }
+    Mod+U              { focus-workspace-down; }
+    Mod+I              { focus-workspace-up; }
+    Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
+    Mod+Ctrl+Page_Up   { move-column-to-workspace-up; }
+    Mod+Ctrl+U         { move-column-to-workspace-down; }
+    Mod+Ctrl+I         { move-column-to-workspace-up; }
+
+    Mod+Shift+Page_Down { move-workspace-down; }
+    Mod+Shift+Page_Up   { move-workspace-up; }
+    Mod+Shift+U         { move-workspace-down; }
+    Mod+Shift+I         { move-workspace-up; }
+
+    Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
+    Mod+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }
+    Mod+Ctrl+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
+    Mod+Ctrl+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }
+
+    Mod+WheelScrollRight      { focus-column-right; }
+    Mod+WheelScrollLeft       { focus-column-left; }
+    Mod+Ctrl+WheelScrollRight { move-column-right; }
+    Mod+Ctrl+WheelScrollLeft  { move-column-left; }
+
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+    Mod+Ctrl+1 { move-column-to-workspace 1; }
+    Mod+Ctrl+2 { move-column-to-workspace 2; }
+    Mod+Ctrl+3 { move-column-to-workspace 3; }
+    Mod+Ctrl+4 { move-column-to-workspace 4; }
+    Mod+Ctrl+5 { move-column-to-workspace 5; }
+    Mod+Ctrl+6 { move-column-to-workspace 6; }
+    Mod+Ctrl+7 { move-column-to-workspace 7; }
+    Mod+Ctrl+8 { move-column-to-workspace 8; }
+    Mod+Ctrl+9 { move-column-to-workspace 9; }
+
+    Mod+Tab { focus-workspace-previous; }
+
+    // ── 列操作 / 浮动 / 全屏 ──
+    Mod+BracketLeft  { consume-or-expel-window-left; }
+    Mod+BracketRight { consume-or-expel-window-right; }
+    Mod+Comma  { consume-window-into-column; }
+    Mod+Period { expel-window-from-column; }
+
+    Mod+R       { switch-preset-column-width; }
+    Mod+Shift+R { switch-preset-column-width-back; }
+    Mod+Ctrl+Shift+R { switch-preset-window-height; }
+    Mod+Ctrl+R { reset-window-height; }
+
+    Mod+F       { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+    Mod+M       { maximize-window-to-edges; }
+    Mod+C       { center-column; }
+
+    Mod+Minus { set-column-width "-10%"; }
+    Mod+Equal { set-column-width "+10%"; }
+    Mod+Shift+Minus { set-window-height "-10%"; }
+    Mod+Shift+Equal { set-window-height "+10%"; }
+
+    Mod+V       { toggle-window-floating; }
+    Mod+Shift+V { switch-focus-between-floating-and-tiling; }
+    Mod+W       { toggle-column-tabbed-display; }
+
+    // ── 截图 ──
+    Print      { screenshot; }
+    Ctrl+Print { screenshot-screen; }
+    Alt+Print  { screenshot-window; }
+
+    // ── 音量 / 媒体 / 亮度 ──
+    XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+ -l 1.0"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-"; }
+    XF86AudioMute        allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
+    XF86AudioMicMute     allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
+
+    XF86AudioPlay        allow-when-locked=true { spawn-sh "playerctl play-pause"; }
+    XF86AudioStop        allow-when-locked=true { spawn-sh "playerctl stop"; }
+    XF86AudioPrev        allow-when-locked=true { spawn-sh "playerctl previous"; }
+    XF86AudioNext        allow-when-locked=true { spawn-sh "playerctl next"; }
+
+    XF86MonBrightnessUp   allow-when-locked=true { spawn "brightnessctl" "set" "+10%"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "set" "10%-"; }
+
+    // ── 系统 ──
+    Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
+    Mod+Shift+E { quit; }
+    Ctrl+Alt+Delete { quit; }
+    Mod+Shift+P { power-off-monitors; }
+}

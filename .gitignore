@@ -2,3 +2,5 @@
 *.bak.*
 *.def.bak
 *.pre-flake*
+result
+result-*

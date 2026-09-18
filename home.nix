@@ -1,4 +1,6 @@
 { config, lib, pkgs, ... }: {
+  imports = [ ./niri.nix ];
+
   home.username = "tianjiao";
   home.homeDirectory = "/home/tianjiao";
   home.stateVersion = "25.11";
@@ -72,10 +74,12 @@
   };
 
   xdg.dataFile."fcitx5/themes/Material-Color-deepPurple" = {
+    force = true;
     source = ./assets/fcitx5-themes/Material-Color-deepPurple;
     recursive = true;
   };
   xdg.dataFile."fcitx5/themes/Material-Color-orange" = {
+    force = true;
     source = ./assets/fcitx5-themes/Material-Color-orange;
     recursive = true;
   };
