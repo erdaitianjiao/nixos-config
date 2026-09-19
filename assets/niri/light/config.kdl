@@ -125,6 +125,7 @@ spawn-at-startup "fcitx5" "-d"
 spawn-at-startup "waybar"
 // 壁纸（从 ~/entertaiment/picture 随机选一张）
 spawn-sh-at-startup "~/.config/niri/wallpaper.sh"
+spawn-sh-at-startup "~/.config/niri/bar-watch.sh"
 // 通知守护进程（装了 mako 才会启动）
 spawn-sh-at-startup "command -v mako >/dev/null && mako"
 
@@ -159,6 +160,7 @@ binds {
     Super+Alt+L allow-when-locked=true { spawn "swaylock"; }
     Mod+Shift+W { spawn-sh "~/.config/niri/wallpaper.sh next"; }
     Mod+Shift+S { spawn-sh "~/.config/niri/wallpaper.sh prev"; }
+    Mod+Shift+Y { spawn-sh "~/.config/niri/bar-watch.sh restart"; }
 
     // ── 窗口焦点 ──
     Mod+Q repeat=false { close-window; }
