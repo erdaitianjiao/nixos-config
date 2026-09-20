@@ -34,8 +34,9 @@ Rectangle {
                 height: 16
                 sourceSize: Qt.size(16, 16)
                 smooth: true
-                source: (modelData.icon && modelData.icon.indexOf("/") === 0) ? "file://" + modelData.icon : Quickshell.iconPath(
-                                                                                    modelData.icon || "", true)
+                // SystemTrayItem.icon 已经是可直接当 Image.source 用的字符串
+                // （形如 image://icon/<name>），不要再套 Quickshell.iconPath
+                source: modelData.icon || ""
 
                 MouseArea {
                     anchors.fill: parent
