@@ -47,11 +47,20 @@ ShellRoot {
         property bool powerMenuOpen: false
         property string powerMenuScreen: ""
 
+        // 从 niri 工作区状态推断当前聚焦输出（供快捷键触发用）
+        function focusedOutput() {
+            for (let i = 0; i < app.workspaces.length; ++i) {
+                if (app.workspaces[i].is_focused)
+                    return app.workspaces[i].output;
+            }
+            return Quickshell.screens.length > 0 ? Quickshell.screens[0].name : "";
+        }
         function togglePowerMenu(screenName) {
-            if (app.powerMenuOpen && app.powerMenuScreen === screenName) {
+            const target = screenName || app.focusedOutput();
+            if (app.powerMenuOpen && app.powerMenuScreen === target) {
                 app.powerMenuOpen = false;
             } else {
-                app.powerMenuScreen = screenName || "";
+                app.powerMenuScreen = target;
                 app.powerMenuOpen = true;
             }
         }
@@ -130,6 +139,22 @@ ShellRoot {
                     wsProc.running = true;
                 if (!winProc.running)
                     winProc.running = true;
+            }
+        }
+
+        // ── IPC：Super+Backspace 走 `qs ipc call power-menu toggle` 触发 ──
+        IpcHandler {
+            target: "power-menu"
+
+            function open(): void {
+                app.powerMenuScreen = app.focusedOutput();
+                app.powerMenuOpen = true;
+            }
+            function close(): void {
+                app.powerMenuOpen = false;
+            }
+            function toggle(): void {
+                app.togglePowerMenu(app.focusedOutput());
             }
         }
 
