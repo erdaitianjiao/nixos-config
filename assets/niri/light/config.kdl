@@ -181,6 +181,8 @@ binds {
     Mod+D      { spawn "fuzzel"; }
     // 切换 waybar / Quickshell(clavis-style)
     Mod+Shift+B { spawn-sh "~/.config/niri/shell-switch.sh"; }
+    // 电源菜单（Quickshell 的 IPC；没跑 Quickshell 时静默无操作）
+    Mod+BackSpace { spawn-sh "~/.config/niri/power-menu.sh"; }
     Super+Alt+L allow-when-locked=true { spawn "swaylock"; }
     Mod+Shift+W { spawn-sh "~/.config/niri/wallpaper.sh next"; }
     Mod+Shift+S { spawn-sh "~/.config/niri/wallpaper.sh prev"; }
