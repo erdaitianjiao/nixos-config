@@ -44,16 +44,21 @@ Item {
         border.color: root.urgent ? root.shell.cRed : root.shell.cGreen
         clip: true
 
-        // 点卡片 = 触发默认动作（没有就关掉）
+        // 点卡片 = 触发默认动作（没有就关掉）；右键 = 直接关
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: {
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: (m) => {
+                if (m.button === Qt.RightButton) {
+                    root.notif.dismiss();
+                    return;
+                }
+                // 先触发默认动作（如果有），然后无论如何都关掉
                 for (let i = 0; i < root.actions.length; ++i) {
                     if (root.actions[i].identifier === "default") {
                         root.actions[i].invoke();
-                        root.dismissRequested();
-                        return;
+                        break;
                     }
                 }
                 root.notif.dismiss();
@@ -66,7 +71,10 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.margins: 12
+            anchors.leftMargin: 12
+            anchors.topMargin: 12
+            // 右边给关闭按钮留位置
+            anchors.rightMargin: 36
             spacing: 6
 
             RowLayout {
@@ -169,6 +177,34 @@ Item {
                         }
                     }
                 }
+            }
+        }
+
+        // 关闭按钮（右上角）
+        Rectangle {
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: 10
+            width: 20
+            height: 20
+            radius: 10
+            color: closeHover.containsMouse ? root.shell.cSurfaceHover : "transparent"
+
+            Text {
+                anchors.centerIn: parent
+                text: "󰅖" // md-close
+                color: root.shell.cComment
+                font.family: root.shell.fontFam
+                font.pixelSize: 14
+            }
+
+            MouseArea {
+                id: closeHover
+
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.notif.dismiss()
             }
         }
 
