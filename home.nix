@@ -17,8 +17,7 @@
     ripgrep              # rg
     # 音乐
     go-musicfox          # 网易云 TUI 客户端
-    # 通讯(unfree,腾讯官方 Linux 版)
-    wechat
+    # 通讯：微信已改用 Flathub 的 com.tencent.WeChat（不再用 nixpkgs 的 AppImage）
   ];
 
   # Fcitx5：英文键盘 + 雾凇拼音，默认使用雾凇。
@@ -44,13 +43,33 @@
   };
 
   # 在候选窗中显示正在输入的拼音编码。
+  # 注意：fcitx5-rime 的 PreeditMode 三种含义（见上游 rimestate.cpp）：
+  #   "Composing text" → 只把拼音当「客户端预编辑」交给应用自己画；
+  #                      QQ/微信/Electron 常常不画 → 哪里都看不到拼音。
+  #   "Commit preview" → 候选窗里画拼音，同时让应用内联显示候选词预览。
+  #   "Do not show"    → 候选窗里画拼音，应用里不显示内联预览。
+  # 所以不要用 "Composing text"（默认值是它，这就是你看不到拼音的原因）。
   xdg.configFile."fcitx5/conf/rime.conf" = {
     force = true;
     text = ''
-      PreeditMode="Composing text"
+      PreeditMode="Commit preview"
       PreeditCursorPositionAtBeginning=False
     '';
   };
+
+  # X11/XWayland 的 GTK 程序走 fcitx im module；Wayland 的 GTK3/4 会忽略它
+  # 而用内置 text-input-v3（见 configuration.nix），所以不用全局 GTK_IM_MODULE。
+  # 这个文件同时被 KDE(kde-gtk-config) 写入主题/字体等，只能“合并”这一个键，
+  # 不能用 xdg.configFile 整体覆盖，否则会把 KDE 的设置冲掉。
+  home.activation.gtkImModule = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    for v in 3.0 4.0; do
+      mkdir -p "$HOME/.config/gtk-$v"
+      ${pkgs.crudini}/bin/crudini --set "$HOME/.config/gtk-$v/settings.ini" Settings gtk-im-module fcitx
+    done
+    if [ ! -f "$HOME/.gtkrc-2.0" ] || ! grep -q '^gtk-im-module=' "$HOME/.gtkrc-2.0"; then
+      echo 'gtk-im-module="fcitx"' >> "$HOME/.gtkrc-2.0"
+    fi
+  '';
 
   # 与主力机一致：只使用 Classic UI，避免与 Plasma Kimpanel 重复显示候选窗。
   xdg.configFile."fcitx5/addon/classicui.conf" = {
