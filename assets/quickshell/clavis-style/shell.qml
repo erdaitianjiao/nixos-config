@@ -43,6 +43,45 @@ ShellRoot {
         property var focusedWindow: null
         property bool niriOk: false
 
+        // ── 电源菜单 ──
+        property bool powerMenuOpen: false
+        property string powerMenuScreen: ""
+
+        function togglePowerMenu(screenName) {
+            if (app.powerMenuOpen && app.powerMenuScreen === screenName) {
+                app.powerMenuOpen = false;
+            } else {
+                app.powerMenuScreen = screenName || "";
+                app.powerMenuOpen = true;
+            }
+        }
+        function closePowerMenu() {
+            app.powerMenuOpen = false;
+        }
+        function powerAction(action) {
+            app.powerMenuOpen = false;
+            switch (action) {
+            case "lock":
+                Quickshell.execDetached(["swaylock"]);
+                break;
+            case "logout":
+                Quickshell.execDetached(["niri", "msg", "action", "quit", "--skip-confirmation"]);
+                break;
+            case "suspend":
+                Quickshell.execDetached(["systemctl", "suspend"]);
+                break;
+            case "hibernate":
+                Quickshell.execDetached(["systemctl", "hibernate"]);
+                break;
+            case "reboot":
+                Quickshell.execDetached(["systemctl", "reboot"]);
+                break;
+            case "poweroff":
+                Quickshell.execDetached(["systemctl", "poweroff"]);
+                break;
+            }
+        }
+
         function focusWorkspace(id) {
             Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", String(id)]);
         }
@@ -99,6 +138,18 @@ ShellRoot {
             model: Quickshell.screens
 
             Bar {
+                required property var modelData
+
+                screen: modelData
+                shell: app
+            }
+        }
+
+        // ── 每个输出一个电源菜单（全屏覆盖）──
+        Variants {
+            model: Quickshell.screens
+
+            PowerMenuWindow {
                 required property var modelData
 
                 screen: modelData
