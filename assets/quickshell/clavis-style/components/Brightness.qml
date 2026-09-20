@@ -1,19 +1,26 @@
 import QtQuick
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
 // 亮度胶囊：
-//  · 左键：在胶囊正下方弹出原生滑块（拖动即时生效，松手/无操作 1.8s 自动隐藏）
-//  · 滚轮：±5%
-//  · 右键：老的字幕 slider-popup（内置屏 + 外接屏 ddcutil 精细调）
+//  · 左键：胶囊正下方弹出原生滑块 —— 内置屏(brightnessctl) + 外接屏(ddcutil)
+//  · 滚轮：内置屏 ±5%
+//  · 右键：老的字幕 slider-popup
 Rectangle {
     id: root
 
     required property var shell
 
+    // 内置屏
     property real raw: 0
     readonly property int pct: Math.round(raw)
+
+    // 外接屏（DDC/CI）
+    property int ddcDisplay: 0 // 0 = 没有可 DDC 的屏
+    property real extRaw: 0
+    property bool extDragging: false
 
     implicitWidth: txt.implicitWidth + 24
     implicitHeight: root.shell.pillH
@@ -28,22 +35,31 @@ Rectangle {
 
     function setPct(p) {
         const v = Math.max(1, Math.min(100, Math.round(p)));
-        root.raw = v; // 立刻反馈，不等 1.5s 轮询
+        root.raw = v; // 立刻反馈
         Quickshell.execDetached(["brightnessctl", "set", v + "%"]);
+    }
+
+    function setExt(v) {
+        const val = Math.max(0, Math.min(100, Math.round(v)));
+        root.extRaw = val;
+        if (root.ddcDisplay <= 0)
+            return;
+        ddcSet.command = ["ddcutil", "--display", String(root.ddcDisplay), "setvcp", "10", String(val)];
+        ddcSet.running = true;
     }
 
     // 和 waybar 的 format-icons 一致：󰃝 󰃞 󰃟 󰃠
     function glyph() {
         if (root.pct < 25)
-            return "󰃝"; // brightness_4
+            return "󰃝";
         if (root.pct < 50)
-            return "󰃞"; // brightness_5
+            return "󰃞";
         if (root.pct < 75)
-            return "󰃟"; // brightness_6
-        return "󰃠"; // brightness_7
+            return "󰃟";
+        return "󰃠";
     }
 
-    // brightnessctl -m 输出: 设备,class,当前,百分比%,最大
+    // ── 读内置：brightnessctl -m = 设备,class,当前,百分比%,最大 ──
     Process {
         id: getProc
 
@@ -53,7 +69,7 @@ Rectangle {
                 const parts = text.trim().split(",");
                 if (parts.length >= 4) {
                     const p = parseFloat(String(parts[3]).replace("%", ""));
-                    if (!isNaN(p) && !sliderHover.pressed && !slider.visible)
+                    if (!isNaN(p) && !slider.visible)
                         root.raw = p;
                 }
             }
@@ -69,6 +85,60 @@ Rectangle {
             if (!getProc.running)
                 getProc.running = true;
         }
+    }
+
+    // ── 外接屏：检测（慢，60s 一次）──
+    Process {
+        id: ddcDetect
+
+        command: ["ddcutil", "detect", "--brief"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const m = text.match(/Display\s+(\d+)/);
+                root.ddcDisplay = m ? parseInt(m[1]) : 0;
+            }
+        }
+    }
+
+    Timer {
+        interval: 60000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            if (!ddcDetect.running && !ddcGet.running && !ddcSet.running)
+                ddcDetect.running = true;
+        }
+    }
+
+    // ── 外接屏：读 ──
+    Process {
+        id: ddcGet
+
+        command: ["ddcutil", "--display", String(root.ddcDisplay), "getvcp", "10"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const m = text.match(/current value\s*=\s*(\d+)/);
+                if (m && !root.extDragging)
+                    root.extRaw = parseInt(m[1]);
+            }
+        }
+    }
+
+    Timer {
+        interval: 3000
+        running: slider.visible && root.ddcDisplay > 0
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            if (!ddcGet.running && !ddcSet.running && !ddcDetect.running && !root.extDragging)
+                ddcGet.running = true;
+        }
+    }
+
+    // ── 外接屏：写（松手才写，ddcutil 很慢）──
+    Process {
+        id: ddcSet
     }
 
     Text {
@@ -98,7 +168,7 @@ Rectangle {
         onWheel: (w) => root.setPct(root.raw + (w.angleDelta.y > 0 ? 5 : -5))
     }
 
-    // ── 原生滑块弹窗：锚在胶囊正下方 ──
+    // ── 滑块弹窗，锚在胶囊正下方 ──
     PopupWindow {
         id: slider
 
@@ -122,8 +192,8 @@ Rectangle {
         }
 
         visible: false
-        implicitWidth: 264
-        implicitHeight: 56
+        implicitWidth: 340
+        implicitHeight: rows.implicitHeight + 28
         color: "transparent"
 
         Timer {
@@ -131,7 +201,6 @@ Rectangle {
 
             interval: 1800
             onTriggered: {
-                // 鼠标还在胶囊或滑块上就先不关
                 if (hover.containsMouse || sliderHover.containsMouse) {
                     restart();
                     return;
@@ -154,66 +223,45 @@ Rectangle {
                 hoverEnabled: true
             }
 
-            Item {
-                id: trackArea
+            Column {
+                id: rows
 
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.leftMargin: 18
                 anchors.rightMargin: 18
-                height: 22
+                spacing: 10
 
-                // 轨道
-                Rectangle {
-                    id: track
-
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width
-                    height: 8
-                    radius: 4
-                    color: root.shell.cSurface
-                    border.width: 1
-                    border.color: root.shell.cBorder
-                }
-
-                // 已填充部分
-                Rectangle {
-                    anchors.left: track.left
-                    anchors.verticalCenter: track.verticalCenter
-                    width: track.width * root.pct / 100
-                    height: track.height
-                    radius: track.radius
-                    color: root.shell.cYellow
-                }
-
-                // 滑块
-                Rectangle {
-                    id: knob
-
-                    anchors.verticalCenter: track.verticalCenter
-                    x: Math.max(0, Math.min(track.width - width, track.width * root.pct / 100 - width / 2))
-                    width: 16
-                    height: 16
-                    radius: 8
-                    color: "#ffffff"
-                    border.width: 2
-                    border.color: root.shell.cYellow
-                }
-
-                // 轨道（±6px 加大命中区，好点）
-                MouseArea {
-                    anchors.fill: parent
-                    anchors.topMargin: -6
-                    anchors.bottomMargin: -6
-                    cursorShape: Qt.PointingHandCursor
-                    onPressed: (m) => applyAt(m.x)
-                    onPositionChanged: (m) => {
-                        if (pressed)
-                            applyAt(m.x);
+                SliderRow {
+                    width: rows.width
+                    shell: root.shell
+                    icon: "󰃟"
+                    label: "内置屏"
+                    value: root.pct
+                    onMoved: (v) => {
+                        root.setPct(v);
+                        slider.poke();
                     }
-                    function applyAt(mx) {
-                        root.setPct(track.width > 0 ? Math.round(mx / track.width * 100) : root.pct);
+                    onCommitted: (v) => root.setPct(v)
+                }
+
+                // 有可 DDC 的外接屏时才显示
+                SliderRow {
+                    width: rows.width
+                    visible: root.ddcDisplay > 0
+                    shell: root.shell
+                    icon: "󰍹"
+                    label: "外接屏"
+                    value: root.extRaw
+                    onMoved: (v) => {
+                        root.extDragging = true;
+                        root.extRaw = v;
+                        slider.poke();
+                    }
+                    onCommitted: (v) => {
+                        root.setExt(v);
+                        root.extDragging = false;
                         slider.poke();
                     }
                 }
