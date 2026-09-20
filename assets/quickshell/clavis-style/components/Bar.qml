@@ -80,6 +80,12 @@ PanelWindow {
             shell: bar.shell
             Layout.alignment: Qt.AlignVCenter
         }
+
+        Power {
+            shell: bar.shell
+            screenName: bar.screenName
+            Layout.alignment: Qt.AlignVCenter
+        }
     }
 
     // 只让圆角条区域可点
