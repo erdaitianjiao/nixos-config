@@ -55,7 +55,7 @@ Rectangle {
                     width: dot.width
                     height: 9
                     radius: height / 2
-                    color: dot.active ? root.shell.cAccent : dot.hasWindows ? root.shell.cFg : root.shell.cFgDim
+                    color: dot.active ? root.shell.cAccent : dot.hasWindows ? root.shell.cFgDim : root.shell.cComment
 
                     Behavior on color {
                         ColorAnimation {

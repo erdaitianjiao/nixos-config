@@ -39,7 +39,7 @@ Rectangle {
 
         anchors.centerIn: parent
         text: root.glyph() + "  " + Math.round(root.vol * 100) + "%"
-        color: root.muted ? root.shell.cFgDim : root.shell.cFg
+        color: root.muted ? root.shell.cComment : root.shell.cAccent2
         font.family: root.shell.fontFam
         font.pixelSize: 13
         font.bold: true

@@ -9,24 +9,28 @@ ShellRoot {
     Item {
         id: app
 
-        // ── 配色 / 尺寸（Clavis 风：悬浮圆角条 + Material 3 半透明表面）──
-        readonly property color cBg: Qt.rgba(0.055, 0.067, 0.114, 0.80)
-        readonly property color cSurface: Qt.rgba(0.145, 0.169, 0.259, 0.92)
-        readonly property color cSurfaceHover: Qt.rgba(0.216, 0.247, 0.373, 0.96)
-        readonly property color cFg: "#c0caf5"
-        readonly property color cFgDim: "#7f87b3"
-        readonly property color cAccent: "#7aa2f7"
-        readonly property color cAccent2: "#bb9af7"
-        readonly property color cGreen: "#9ece6a"
-        readonly property color cYellow: "#e0af68"
-        readonly property color cRed: "#f7768e"
-        readonly property color cBorder: Qt.rgba(1, 1, 1, 0.08)
+        // ── 配色 / 尺寸（对齐 light(Matcha) 主题：assets/niri/light/style.css）──
+        readonly property color cBg: Qt.rgba(0.949, 0.965, 0.925, 0.78) // #f2f6ec 半透明
+        readonly property color cSurface: Qt.rgba(0.902, 0.925, 0.867, 0.95) // #e6ecdd
+        readonly property color cSurfaceHover: Qt.rgba(0.855, 0.882, 0.812, 1.0) // #dae1cf
+        readonly property color cFg: "#3d4a44"
+        readonly property color cFgDim: "#5e7065"
+        readonly property color cComment: "#93a48f"
+        readonly property color cAccent: "#4f9d57" // green：工作区激活
+        readonly property color cAccent2: "#967bc0" // purple：音量
+        readonly property color cCyan: "#3fa98e"
+        readonly property color cBlue: "#4d87c8"
+        readonly property color cGreen: "#4f9d57"
+        readonly property color cYellow: "#c39a3f"
+        readonly property color cOrange: "#d97848"
+        readonly property color cRed: "#d86666"
+        readonly property color cBorder: Qt.rgba(0.761, 0.827, 0.682, 0.85) // #c2d3ae
 
-        readonly property int radius: 19
-        readonly property int barH: 38
+        readonly property int radius: 16
+        readonly property int barH: 36
         readonly property int margin: 8
-        readonly property int pillH: 30
-        readonly property int pillRadius: 15
+        readonly property int pillH: 28
+        readonly property int pillRadius: 14
         readonly property string fontFam: "CaskaydiaCove Nerd Font, JetBrainsMono Nerd Font, Noto Sans CJK SC, sans-serif"
 
         // ── niri 状态 ──
