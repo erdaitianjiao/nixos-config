@@ -81,15 +81,6 @@ window-rule {
     }
 }
 
-// 音量/亮度弹窗滑块：浮动 + 固定到右上角（waybar 下方）
-window-rule {
-    match app-id="SliderPopup"
-    open-floating true
-    default-floating-position x=8 y=42 relative-to="top-right"
-    geometry-corner-radius 12
-    clip-to-geometry true
-}
-
 // QQ / 微信 弹窗（含新消息提示）浮动，避免被平铺或被挤出屏幕
 window-rule {
     match app-id="^(QQ|wechat|weixin)$"
@@ -104,9 +95,10 @@ layer-rule {
         blur true
     }
 }
+// Quickshell(clavis-style) 的 bar
 layer-rule {
-    match namespace="^waybar$"
-    geometry-corner-radius 12
+    match namespace="^qs-clavis-bar$"
+    geometry-corner-radius 16
     background-effect {
         blur true
     }
@@ -131,14 +123,14 @@ environment {
 // ── 开机自启 ─────────────────────────────────────────
 // fcitx5 已由系统 XDG autostart(org.fcitx.Fcitx5.desktop) 启动，
 // 这里不再重复 spawn，否则两个实例会抢 DBus 名。
-spawn-at-startup "waybar"
+// Quickshell(clavis-style) 这条 bar；它自带通知弹窗（接管
+// org.freedesktop.Notifications），所以不需要 waybar / mako。
+spawn-at-startup "quickshell" "-c" "clavis-style"
 // 让 X11 侧 fcitx5 候选窗跟随当前聚焦输出缩放（动态写 Xft.dpi）
 spawn-sh-at-startup "~/.config/niri/xwayland-dpi.sh"
 // 壁纸（从 ~/entertaiment/picture 随机选一张）
 spawn-sh-at-startup "~/.config/niri/wallpaper.sh"
 spawn-sh-at-startup "~/.config/niri/bar-watch.sh"
-// 通知守护进程（装了 mako 才会启动）
-spawn-sh-at-startup "command -v mako >/dev/null && mako"
 // polkit 认证代理（niri 不会自动启动）。挂载内置磁盘、修改系统设置等
 // 需要认证时靠它弹密码框；缺失会报“PolicyKit 认证系统不可用”。
 spawn-at-startup "/run/current-system/sw/libexec/polkit-kde-authentication-agent-1"
@@ -171,6 +163,8 @@ binds {
     Mod+Return { spawn "kitty"; }
     Mod+T      { spawn "kitty"; }
     Mod+D      { spawn "fuzzel"; }
+    // 电源菜单（Quickshell 的 IPC；没跑 Quickshell 时静默无操作）
+    Mod+BackSpace { spawn-sh "~/.config/niri/power-menu.sh"; }
     Super+Alt+L allow-when-locked=true { spawn "swaylock"; }
     Mod+Shift+W { spawn-sh "~/.config/niri/wallpaper.sh next"; }
     Mod+Shift+S { spawn-sh "~/.config/niri/wallpaper.sh prev"; }

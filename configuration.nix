@@ -57,6 +57,8 @@ in {
     gfxpayloadEfi = "keep";    # 内核启动后控制台也保持此分辨率
   };
   boot.kernelModules = [ "tcp_bbr" ];  # 拥塞控制(hardware-configuration.nix 另有 kvm-intel,会自动合并)
+  # 休眠(hibernate)需要知道从哪个 swap 分区恢复(hardware-configuration.nix 里的 16G swap)
+  boot.resumeDevice = "/dev/disk/by-uuid/ee1cdad1-4106-452f-8149-18c7bbaa7bc2";
   # 内核 IPv4 转发 —— Docker 容器上网必需。默认 0 会导致容器 DNS 解析 / TCP 连接全部失败。
   boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
   # BBR 拥塞控制:加载模块只是第一步,还要切换算法 + 配合 fq 队列才真正生效
@@ -134,7 +136,7 @@ in {
     nerd-fonts.fira-code
     nerd-fonts.jetbrains-mono
     nerd-fonts.caskaydia-cove   # CaskaydiaCove Nerd Font（niri/kitty 配置用）
-    nerd-fonts._0xproto         # 0xProto Nerd Font（waybar 用）
+    nerd-fonts._0xproto         # 0xProto Nerd Font
   ];
   fonts.fontconfig = {
     enable = true;
@@ -248,6 +250,7 @@ in {
 
     # 终端 / 实用工具
     tmux htop wget git curl unzip unrar
+    libnotify                     # notify-send（脚本发通知用；之前没装，脚本里都静默失败了）
     gnome-terminal
     zsh-powerlevel10k
 
@@ -270,7 +273,7 @@ in {
     whitesur-kde
 
     # niri 桌面 / 状态栏 / 启动器 / 通知 / 工具
-    niri kitty waybar fuzzel mako swaybg swaylock
+    niri kitty fuzzel swaybg swaylock
     brightnessctl playerctl wl-clipboard pavucontrol xwayland-satellite ddcutil
   ];
 
