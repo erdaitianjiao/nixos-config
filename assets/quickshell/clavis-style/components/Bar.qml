@@ -23,7 +23,13 @@ PanelWindow {
     }
     implicitHeight: shell.barH
     color: "transparent"
-    exclusiveZone: shell.barH + shell.margin
+    // niri 会把 margin 叠加到 exclusiveZone 上，顶部实际预留 = margin + exclusiveZone。
+    //   可见间距 = (margin + exclusiveZone) + niri gaps(8) - (margin + barH)
+    //            = exclusiveZone + 8 - barH
+    // 之前写 barH + margin 相当于把 margin 算了两遍 → 间距 16。
+    // 现在 = barH → 间距 8，和 niri 的 gaps / waybar 一致。
+    // 想再紧/松一点就 shell.barH ± N（N=3 → 间距 11，N=-3 → 间距 5）。
+    exclusiveZone: shell.barH
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "qs-clavis-bar"
 
