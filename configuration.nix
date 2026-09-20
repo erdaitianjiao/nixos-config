@@ -136,7 +136,7 @@ in {
     nerd-fonts.fira-code
     nerd-fonts.jetbrains-mono
     nerd-fonts.caskaydia-cove   # CaskaydiaCove Nerd Font（niri/kitty 配置用）
-    nerd-fonts._0xproto         # 0xProto Nerd Font（waybar 用）
+    nerd-fonts._0xproto         # 0xProto Nerd Font
   ];
   fonts.fontconfig = {
     enable = true;
@@ -273,7 +273,7 @@ in {
     whitesur-kde
 
     # niri 桌面 / 状态栏 / 启动器 / 通知 / 工具
-    niri kitty waybar fuzzel mako swaybg swaylock
+    niri kitty fuzzel swaybg swaylock
     brightnessctl playerctl wl-clipboard pavucontrol xwayland-satellite ddcutil
   ];
 

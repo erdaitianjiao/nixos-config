@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# waybar/Quickshell + 壁纸守护。
+# Quickshell bar + 壁纸守护。
 #
 # 两个职责：
 #  1) 壁纸：swww 在输出重连（盒盖/开盖、插拔屏）后会把该屏重置成纯色(黑)。niri 26.04
 #     的事件流里【没有】输出变化事件，所以这里【轮询】检查 `swww query`：只要有屏在
 #     显示 "color:"(纯色) 就重新贴一遍缓存的壁纸。
-#  2) bar：输出集合变化后重启当前在跑的那条 bar（老 waybar 热插拔后会卡在重绘；
-#     Quickshell 同理）。Quickshell 还是 waybar 由谁在跑决定。
+#  2) bar：输出集合变化后重启 Quickshell bar（热插拔后它偶尔会卡在旧布局）。
 #
 #   bar-watch.sh            # 常驻（spawn-at-startup 用）
 #   bar-watch.sh restart    # 立即重启 bar + 重贴壁纸
@@ -27,20 +26,13 @@ swww_has_blank() {
 	swww query 2>/dev/null | grep -q 'displaying: color:'
 }
 
-# 输出变化后重启「当前这条 bar」：Quickshell 或 waybar
-# ⚠️ nix 的 wrapper 把 comm 改成 .waybar-wrapped / .quickshell-wra；
-#    Quickshell 是用裸名启动的（argv[0] 不含路径），所以匹配要看 comm 或
-#    cmdline 开头，不能只写 pkill -f '/bin/quickshell'。
+# 输出变化后重启 Quickshell bar
+# ⚠️ nix 的 wrapper 把 comm 改成 .quickshell-wra，且它是用裸名启动的
+#    （argv[0] 不含路径），所以匹配要看 comm 或 cmdline 开头。
 restart_bar() {
-	if pgrep -x .quickshell-wra >/dev/null 2>&1 || pgrep -f '^quickshell' >/dev/null 2>&1; then
-		pkill -x .quickshell-wra 2>/dev/null || pkill -f '^quickshell' 2>/dev/null || true
-		sleep 0.5
-		setsid quickshell -c "${QSCONFIG:-clavis-style}" >/dev/null 2>&1 &
-	else
-		pkill -x .waybar-wrapped 2>/dev/null || pkill -f '^waybar' 2>/dev/null || true
-		sleep 0.3
-		setsid waybar >/dev/null 2>&1 &
-	fi
+	pkill -x .quickshell-wra 2>/dev/null || pkill -f '^quickshell' 2>/dev/null || true
+	sleep 0.5
+	setsid quickshell -c "${QSCONFIG:-clavis-style}" >/dev/null 2>&1 &
 }
 
 outputs_sig() {
