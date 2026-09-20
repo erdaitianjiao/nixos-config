@@ -61,12 +61,17 @@ PanelWindow {
             Layout.alignment: Qt.AlignVCenter
         }
 
-        Battery {
+        Volume {
             shell: bar.shell
             Layout.alignment: Qt.AlignVCenter
         }
 
-        Volume {
+        Brightness {
+            shell: bar.shell
+            Layout.alignment: Qt.AlignVCenter
+        }
+
+        Battery {
             shell: bar.shell
             Layout.alignment: Qt.AlignVCenter
         }
