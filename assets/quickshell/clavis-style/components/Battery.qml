@@ -23,7 +23,7 @@ Rectangle {
 
         anchors.centerIn: parent
         text: (root.charging ? "󰂄 " : "") + root.pct + "%"
-        color: (root.pct <= 15 && !root.charging) ? root.shell.cRed : root.shell.cFg
+        color: (root.pct <= 15) ? root.shell.cRed : (root.pct <= 30) ? root.shell.cYellow : root.shell.cGreen
         font.family: root.shell.fontFam
         font.pixelSize: 13
         font.bold: true

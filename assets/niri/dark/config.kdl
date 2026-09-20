@@ -111,6 +111,14 @@ layer-rule {
         blur true
     }
 }
+// Quickshell(clavis-style) 的实验 bar
+layer-rule {
+    match namespace="^qs-clavis-bar$"
+    geometry-corner-radius 16
+    background-effect {
+        blur true
+    }
+}
 layer-rule {
     match namespace="^notifications$"
     geometry-corner-radius 12

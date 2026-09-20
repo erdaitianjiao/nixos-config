@@ -36,7 +36,7 @@ Item {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
             text: root.title
-            color: root.shell.cFg
+            color: root.shell.cFgDim
             font.family: root.shell.fontFam
             font.pixelSize: 13
             elide: Text.ElideRight
