@@ -228,7 +228,7 @@ in {
     cc-switch
 
     # 终端 / 实用工具
-    tmux wget git curl unzip unrar
+    tmux htop wget git curl unzip unrar
     gnome-terminal
     zsh-powerlevel10k
 
