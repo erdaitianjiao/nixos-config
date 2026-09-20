@@ -98,15 +98,26 @@ in {
   i18n.inputMethod = {
     enable = true;
     type = "fcitx5";
-    fcitx5.addons = with pkgs; [
-      qt6Packages.fcitx5-chinese-addons
-      (fcitx5-rime.override { rimeDataPkgs = [ rime-ice ]; })
-    ];
+    fcitx5 = {
+      # Wayland 会话说 text-input-v3：候选窗交给合成器用 input-method-v2 的
+      # popup surface 摆放，不会像 GTK/Qt im module 那样在应用进程里用
+      # xdg_popup 反复 show/hide 重定位（表现为候选窗闪、输入发卡）。
+      # XWayland 程序仍靠 fcitx5 模块自动设的 XMODIFIERS。
+      waylandFrontend = true;
+      addons = with pkgs; [
+        qt6Packages.fcitx5-chinese-addons
+        (fcitx5-rime.override { rimeDataPkgs = [ rime-ice ]; })
+      ];
+    };
   };
-  environment.variables = {
-    GTK_IM_MODULE = "fcitx";
-    QT_IM_MODULE = "fcitx";
-    XMODIFIERS = "@im=fcitx";
+  # 不再全局设 GTK_IM_MODULE / QT_IM_MODULE（这正是上面那个闪烁/卡顿的成因）：
+  #   · Wayland 的 GTK3/4 → 内置 text-input-v3
+  #   · Wayland 的 Qt6.7+  → QT_IM_MODULES 回退顺序（wayland 优先）
+  #   · X11/XWayland 的 GTK → ~/.config/gtk-{3,4}.0/settings.ini 的 gtk-im-module=fcitx
+  #   · 其它 X11 程序        → XMODIFIERS（由 fcitx5 模块设置）
+  environment.sessionVariables = {
+    QT_IM_MODULES = "wayland;fcitx";
+    NIXOS_OZONE_WL = "1";   # nixpkgs 的 Electron 包据此走 Wayland，配合 --enable-wayland-ime
   };
 
   # ─── 字体 ──────────────────────────────────────────────────
