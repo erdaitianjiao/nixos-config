@@ -10,11 +10,20 @@ Item {
     required property var shell
     required property var notif
 
-    signal dismissRequested()
+    signal closed()
 
     readonly property bool urgent: notif.urgency === NotificationUrgency.Critical
     readonly property int timeoutMs: notif.expireTimeout > 0 ? notif.expireTimeout : (urgent ? 0 : 6000)
     readonly property var actions: notif.actions ? notif.actions : []
+
+    // ⚠️ 对 C++ 信号要用 Connections；QML 的 signal.connect(fn) 只对
+    // QML 自己声明的信号有效，接不上 closed()。
+    Connections {
+        target: root.notif
+        function onClosed(reason) {
+            root.closed();
+        }
+    }
 
     function iconSource() {
         if (notif.image)

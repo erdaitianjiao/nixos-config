@@ -48,6 +48,7 @@ PanelWindow {
                 width: list.width
                 shell: root.shell
                 notif: modelData
+                onClosed: root.manager.remove(modelData.id)
             }
         }
     }
