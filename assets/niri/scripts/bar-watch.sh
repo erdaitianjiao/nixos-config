@@ -28,15 +28,16 @@ swww_has_blank() {
 }
 
 # 输出变化后重启「当前这条 bar」：Quickshell 或 waybar
-# ⚠️ nix 的 wrapper 把进程名改成 .waybar-wrapped / .quickshell-wra，
-#    所以 pkill -x waybar 是无效的。
+# ⚠️ nix 的 wrapper 把 comm 改成 .waybar-wrapped / .quickshell-wra；
+#    Quickshell 是用裸名启动的（argv[0] 不含路径），所以匹配要看 comm 或
+#    cmdline 开头，不能只写 pkill -f '/bin/quickshell'。
 restart_bar() {
-	if pgrep -f '/bin/quickshell' >/dev/null 2>&1; then
-		pkill -f '/bin/quickshell' 2>/dev/null || true
+	if pgrep -x .quickshell-wra >/dev/null 2>&1 || pgrep -f '^quickshell' >/dev/null 2>&1; then
+		pkill -x .quickshell-wra 2>/dev/null || pkill -f '^quickshell' 2>/dev/null || true
 		sleep 0.5
 		setsid quickshell -c "${QSCONFIG:-clavis-style}" >/dev/null 2>&1 &
 	else
-		pkill -x .waybar-wrapped 2>/dev/null || pkill -x waybar 2>/dev/null || true
+		pkill -x .waybar-wrapped 2>/dev/null || pkill -f '^waybar' 2>/dev/null || true
 		sleep 0.3
 		setsid waybar >/dev/null 2>&1 &
 	fi
