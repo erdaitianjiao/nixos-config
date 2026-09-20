@@ -67,6 +67,16 @@ PanelWindow {
             Layout.alignment: Qt.AlignVCenter
         }
 
+        Network {
+            shell: bar.shell
+            Layout.alignment: Qt.AlignVCenter
+        }
+
+        Bluetooth {
+            shell: bar.shell
+            Layout.alignment: Qt.AlignVCenter
+        }
+
         Volume {
             shell: bar.shell
             Layout.alignment: Qt.AlignVCenter
