@@ -1,5 +1,10 @@
 // Clavis 风格的 niri shell（Quickshell）
 // 试运行：  qs -p ~/nixos-config/assets/quickshell/clavis-style
+//
+// 指定图标主题：否则 QIcon::fromTheme 找不到托盘里的 symbolic 图标
+// （如 fcitx 的 input-keyboard-symbolic 只在 Tela 里有）。
+//@ pragma IconTheme Tela
+
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -31,7 +36,7 @@ ShellRoot {
         readonly property int margin: 8
         readonly property int pillH: 28
         readonly property int pillRadius: 14
-        readonly property string fontFam: "CaskaydiaCove Nerd Font, JetBrainsMono Nerd Font, Noto Sans CJK SC, sans-serif"
+        readonly property string fontFam: "CaskaydiaCove Nerd Font"
 
         // ── niri 状态 ──
         property var workspaces: []
