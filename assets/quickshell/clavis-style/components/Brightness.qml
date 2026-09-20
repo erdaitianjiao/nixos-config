@@ -7,7 +7,6 @@ import Quickshell.Wayland
 // 亮度胶囊：
 //  · 左键：胶囊正下方弹出原生滑块 —— 内置屏(brightnessctl) + 外接屏(ddcutil)
 //  · 滚轮：内置屏 ±5%
-//  · 右键：老的字幕 slider-popup
 Rectangle {
     id: root
 
@@ -158,13 +157,8 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: (m) => {
-            if (m.button === Qt.LeftButton)
-                slider.toggle();
-            else
-                Quickshell.execDetached([Quickshell.env("HOME") + "/.config/waybar/slider-popup", "brightness"]);
-        }
+        acceptedButtons: Qt.LeftButton
+        onClicked: slider.toggle()
         onWheel: (w) => root.setPct(root.raw + (w.angleDelta.y > 0 ? 5 : -5))
     }
 

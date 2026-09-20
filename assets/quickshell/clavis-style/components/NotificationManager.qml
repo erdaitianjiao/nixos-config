@@ -3,8 +3,8 @@ import Quickshell
 import Quickshell.Services.Notifications
 
 // 通知（消息弹窗）管理器：接管 org.freedesktop.Notifications
-// ⚠️ 系统里同时只能有一个通知守护进程 —— 起这个 shell 时要先把 mako 停掉
-// （shell-switch.sh 里做了），否则抢不到名字，弹窗不会出现。
+// ⚠️ 系统里同时只能有一个通知守护进程。niri 现在不再起 mako，由这个 shell
+// 独占；如果手动跑了别的通知守护进程，要先停掉它。
 Item {
     id: root
 
