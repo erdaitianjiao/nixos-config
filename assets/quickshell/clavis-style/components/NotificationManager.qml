@@ -17,15 +17,11 @@ Item {
 
     function add(n) {
         n.tracked = true;
-        n.closed.connect(function (reason) {
-            root.remove(n.id);
-        });
         const list = root.items.slice();
         list.unshift(n);
-        // 超出上限就把最旧的收掉（它仍然被 track，只是不弹了）
+        // 超出上限就把最旧的收掉（dismiss 后会通过 closed → remove 从列表里消失）
         while (list.length > root.maxVisible) {
-            const old = list.pop();
-            old.dismiss();
+            list.pop().dismiss();
         }
         root.items = list;
     }
@@ -33,9 +29,7 @@ Item {
     function remove(id) {
         const list = [];
         for (let i = 0; i < root.items.length; ++i) {
-            if (root.items[i].id === id)
-                root.items[i].tracked = false;
-            else
+            if (root.items[i].id !== id)
                 list.push(root.items[i]);
         }
         if (list.length !== root.items.length)
@@ -45,10 +39,8 @@ Item {
     function dismissAll() {
         const list = root.items;
         root.items = [];
-        for (let i = 0; i < list.length; ++i) {
-            list[i].tracked = false;
+        for (let i = 0; i < list.length; ++i)
             list[i].dismiss();
-        }
     }
 
     NotificationServer {
