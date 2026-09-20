@@ -73,7 +73,7 @@ Rectangle {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: (m) => {
             if (m.button === Qt.LeftButton)
-                Quickshell.execDetached([Quickshell.env("HOME") + "/.config/waybar/wifi-menu.sh"]);
+                Quickshell.execDetached([Quickshell.env("HOME") + "/.config/niri/wifi-menu.sh"]);
             else
                 Quickshell.execDetached(["nm-connection-editor"]);
         }

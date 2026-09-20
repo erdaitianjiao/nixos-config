@@ -86,8 +86,8 @@
     fi
   '';
 
-  # ── Quickshell 实验 shell (clavis-style) ──
-  # 用 niri 快捷键 Mod+Shift+B 在 waybar 和它之间切换（见 shell-switch.sh）
+  # ── Quickshell 的 bar / 通知（clavis-style）──
+  # 配置来源在 assets/quickshell/clavis-style，由 niri 开机自启 `quickshell -c clavis-style`。
   xdg.configFile."quickshell/clavis-style" = {
     source = ./assets/quickshell/clavis-style;
     recursive = true;

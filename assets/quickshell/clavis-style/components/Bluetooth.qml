@@ -62,9 +62,9 @@ Rectangle {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: (m) => {
             if (m.button === Qt.LeftButton)
-                Quickshell.execDetached([Quickshell.env("HOME") + "/.config/waybar/bluetooth-toggle.sh"]);
+                Quickshell.execDetached([Quickshell.env("HOME") + "/.config/niri/bluetooth-toggle.sh"]);
             else
-                Quickshell.execDetached([Quickshell.env("HOME") + "/.config/waybar/bluetooth-menu.sh"]);
+                Quickshell.execDetached([Quickshell.env("HOME") + "/.config/niri/bluetooth-menu.sh"]);
         }
     }
 }

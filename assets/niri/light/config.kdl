@@ -81,15 +81,6 @@ window-rule {
     }
 }
 
-// 音量/亮度弹窗滑块：浮动 + 固定到右上角（waybar 下方）
-window-rule {
-    match app-id="SliderPopup"
-    open-floating true
-    default-floating-position x=8 y=42 relative-to="top-right"
-    geometry-corner-radius 12
-    clip-to-geometry true
-}
-
 // QQ / 微信 弹窗（含新消息提示）浮动，避免被平铺或被挤出屏幕
 window-rule {
     match app-id="^(QQ|wechat|weixin)$"
@@ -104,14 +95,7 @@ layer-rule {
         blur true
     }
 }
-layer-rule {
-    match namespace="^waybar$"
-    geometry-corner-radius 12
-    background-effect {
-        blur true
-    }
-}
-// Quickshell(clavis-style) 的实验 bar
+// Quickshell(clavis-style) 的 bar
 layer-rule {
     match namespace="^qs-clavis-bar$"
     geometry-corner-radius 16
@@ -139,10 +123,9 @@ environment {
 // ── 开机自启 ─────────────────────────────────────────
 // fcitx5 已由系统 XDG autostart(org.fcitx.Fcitx5.desktop) 启动，
 // 这里不再重复 spawn，否则两个实例会抢 DBus 名。
-// 默认起 Quickshell(clavis-style) 这条 bar；它自带通知弹窗（接管
-// org.freedesktop.Notifications），所以不再单独起 mako。
-// 启动失败会自动回退 waybar；Mod+Shift+B 可在两者间切换。
-spawn-sh-at-startup "~/.config/niri/shell-switch.sh"
+// Quickshell(clavis-style) 这条 bar；它自带通知弹窗（接管
+// org.freedesktop.Notifications），所以不需要 waybar / mako。
+spawn-at-startup "quickshell" "-c" "clavis-style"
 // 让 X11 侧 fcitx5 候选窗跟随当前聚焦输出缩放（动态写 Xft.dpi）
 spawn-sh-at-startup "~/.config/niri/xwayland-dpi.sh"
 // 壁纸（从 ~/entertaiment/picture 随机选一张）
@@ -180,8 +163,6 @@ binds {
     Mod+Return { spawn "kitty"; }
     Mod+T      { spawn "kitty"; }
     Mod+D      { spawn "fuzzel"; }
-    // 切换 waybar / Quickshell(clavis-style)
-    Mod+Shift+B { spawn-sh "~/.config/niri/shell-switch.sh"; }
     // 电源菜单（Quickshell 的 IPC；没跑 Quickshell 时静默无操作）
     Mod+BackSpace { spawn-sh "~/.config/niri/power-menu.sh"; }
     Super+Alt+L allow-when-locked=true { spawn "swaylock"; }
