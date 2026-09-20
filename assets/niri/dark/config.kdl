@@ -120,20 +120,28 @@ layer-rule {
 screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 
 // ── 输入法环境变量（fcitx5 + 雾凇拼音）───────────────
+// 这里不要设 GTK_IM_MODULE / QT_IM_MODULE：那会让 Wayland 应用退回 im
+// module，候选窗在应用进程里用 xdg_popup 反复 show/hide 重定位 → 闪/卡。
+// Wayland GTK/Qt 走 text-input-v3；X11 的 GTK 程序由
+// ~/.config/gtk-{3,4}.0/settings.ini 里的 gtk-im-module=fcitx 接管。
 environment {
-    GTK_IM_MODULE "fcitx"
-    QT_IM_MODULE "fcitx"
     XMODIFIERS "@im=fcitx"
 }
 
 // ── 开机自启 ─────────────────────────────────────────
-spawn-at-startup "fcitx5" "-d"
+// fcitx5 已由系统 XDG autostart(org.fcitx.Fcitx5.desktop) 启动，
+// 这里不再重复 spawn，否则两个实例会抢 DBus 名。
 spawn-at-startup "waybar"
+// 让 X11 侧 fcitx5 候选窗跟随当前聚焦输出缩放（动态写 Xft.dpi）
+spawn-sh-at-startup "~/.config/niri/xwayland-dpi.sh"
 // 壁纸（从 ~/entertaiment/picture 随机选一张）
 spawn-sh-at-startup "~/.config/niri/wallpaper.sh"
 spawn-sh-at-startup "~/.config/niri/bar-watch.sh"
 // 通知守护进程（装了 mako 才会启动）
 spawn-sh-at-startup "command -v mako >/dev/null && mako"
+// polkit 认证代理（niri 不会自动启动）。挂载内置磁盘、修改系统设置等
+// 需要认证时靠它弹密码框；缺失会报“PolicyKit 认证系统不可用”。
+spawn-at-startup "/run/current-system/sw/libexec/polkit-kde-authentication-agent-1"
 
 // ── 动画 / 毛玻璃 ─────────────────────────────────────
 animations {
