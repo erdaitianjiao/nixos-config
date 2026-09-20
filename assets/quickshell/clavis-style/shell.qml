@@ -181,5 +181,24 @@ ShellRoot {
                 shell: app
             }
         }
+
+        // ── 通知（接管 org.freedesktop.Notifications，需先停 mako）──
+        NotificationManager {
+            id: notifs
+
+            shell: app
+        }
+
+        Variants {
+            model: Quickshell.screens
+
+            NotifPopups {
+                required property var modelData
+
+                screen: modelData
+                shell: app
+                manager: notifs
+            }
+        }
     }
 }
