@@ -139,14 +139,15 @@ environment {
 // ── 开机自启 ─────────────────────────────────────────
 // fcitx5 已由系统 XDG autostart(org.fcitx.Fcitx5.desktop) 启动，
 // 这里不再重复 spawn，否则两个实例会抢 DBus 名。
-spawn-at-startup "waybar"
+// 默认起 Quickshell(clavis-style) 这条 bar；它自带通知弹窗（接管
+// org.freedesktop.Notifications），所以不再单独起 mako。
+// 启动失败会自动回退 waybar；Mod+Shift+B 可在两者间切换。
+spawn-sh-at-startup "~/.config/niri/shell-switch.sh"
 // 让 X11 侧 fcitx5 候选窗跟随当前聚焦输出缩放（动态写 Xft.dpi）
 spawn-sh-at-startup "~/.config/niri/xwayland-dpi.sh"
 // 壁纸（从 ~/entertaiment/picture 随机选一张）
 spawn-sh-at-startup "~/.config/niri/wallpaper.sh"
 spawn-sh-at-startup "~/.config/niri/bar-watch.sh"
-// 通知守护进程（装了 mako 才会启动）
-spawn-sh-at-startup "command -v mako >/dev/null && mako"
 // polkit 认证代理（niri 不会自动启动）。挂载内置磁盘、修改系统设置等
 // 需要认证时靠它弹密码框；缺失会报“PolicyKit 认证系统不可用”。
 spawn-at-startup "/run/current-system/sw/libexec/polkit-kde-authentication-agent-1"

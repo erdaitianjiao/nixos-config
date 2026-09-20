@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# waybar + 壁纸守护。
+# waybar/Quickshell + 壁纸守护。
 #
 # 两个职责：
 #  1) 壁纸：swww 在输出重连（盒盖/开盖、插拔屏）后会把该屏重置成纯色(黑)。niri 26.04
 #     的事件流里【没有】输出变化事件，所以这里【轮询】检查 `swww query`：只要有屏在
 #     显示 "color:"(纯色) 就重新贴一遍缓存的壁纸。
-#  2) waybar：输出集合变化后重启 waybar（老 waybar 热插拔后会卡在重绘）。
+#  2) bar：输出集合变化后重启当前在跑的那条 bar（老 waybar 热插拔后会卡在重绘；
+#     Quickshell 同理）。Quickshell 还是 waybar 由谁在跑决定。
 #
 #   bar-watch.sh            # 常驻（spawn-at-startup 用）
-#   bar-watch.sh restart    # 立即重启 waybar + 重贴壁纸
+#   bar-watch.sh restart    # 立即重启 bar + 重贴壁纸
 set -uo pipefail
 export PATH="$HOME/.local/bin:/usr/bin:/bin"
 
@@ -26,10 +27,19 @@ swww_has_blank() {
 	swww query 2>/dev/null | grep -q 'displaying: color:'
 }
 
-restart_waybar() {
-	pkill -x waybar 2>/dev/null || true
-	sleep 0.3
-	setsid waybar >/dev/null 2>&1 &
+# 输出变化后重启「当前这条 bar」：Quickshell 或 waybar
+# ⚠️ nix 的 wrapper 把进程名改成 .waybar-wrapped / .quickshell-wra，
+#    所以 pkill -x waybar 是无效的。
+restart_bar() {
+	if pgrep -f '/bin/quickshell' >/dev/null 2>&1; then
+		pkill -f '/bin/quickshell' 2>/dev/null || true
+		sleep 0.5
+		setsid quickshell -c "${QSCONFIG:-clavis-style}" >/dev/null 2>&1 &
+	else
+		pkill -x .waybar-wrapped 2>/dev/null || pkill -x waybar 2>/dev/null || true
+		sleep 0.3
+		setsid waybar >/dev/null 2>&1 &
+	fi
 }
 
 outputs_sig() {
@@ -38,7 +48,7 @@ outputs_sig() {
 
 case "${1:-watch}" in
 	restart)
-		restart_waybar
+		restart_bar
 		sleep 1
 		apply_wallpaper
 		exit 0
@@ -55,12 +65,12 @@ while sleep 2; do
 	# 壁纸自愈
 	swww_has_blank && apply_wallpaper
 
-	# waybar 热插拔重启
+	# bar 热插拔重启
 	cur="$(outputs_sig)"
 	if [ -n "$cur" ] && [ "$cur" != "$prev" ]; then
 		prev="$cur"
 		sleep 1
-		restart_waybar
+		restart_bar
 		sleep 1
 		apply_wallpaper
 	fi
