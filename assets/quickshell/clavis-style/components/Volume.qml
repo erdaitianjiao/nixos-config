@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.Pipewire
 
-// 音量胶囊（点击打开 pavucontrol）
+// 音量胶囊：滚轮 ±5%，左键静音开关，右键 pavucontrol
 Rectangle {
     id: root
 
@@ -24,14 +24,28 @@ Rectangle {
         }
     }
 
+    // ⚠️ PwNodeAudio 的 volume / muted 只有在节点被 PwObjectTracker 绑定后才有效，
+    // 否则读到 0 且设置无效（上游 qml.hpp 里的 WARNING）。
+    PwObjectTracker {
+        objects: [Pipewire.defaultAudioSink]
+    }
+
+    function step(delta) {
+        if (!root.audio)
+            return;
+        root.audio.volume = Math.max(0, Math.min(1, root.audio.volume + delta));
+        if (root.audio.muted && delta > 0)
+            root.audio.muted = false;
+    }
+
     function glyph() {
         if (root.muted)
             return "󰝟"; // volume off
         if (root.vol > 0.66)
-            return "󰕾"; // volume high
+            return "󰕾"; // high
         if (root.vol > 0.33)
-            return "󰖀"; // volume medium
-        return "󰕿"; // volume low
+            return "󰖀"; // medium
+        return "󰕿"; // low
     }
 
     Text {
@@ -51,6 +65,15 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: Quickshell.execDetached(["pavucontrol"])
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: (m) => {
+            if (!root.audio)
+                return;
+            if (m.button === Qt.LeftButton)
+                root.audio.muted = !root.audio.muted;
+            else
+                Quickshell.execDetached(["pavucontrol"]);
+        }
+        onWheel: (w) => root.step(w.angleDelta.y > 0 ? 0.05 : -0.05);
     }
 }
