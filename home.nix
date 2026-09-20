@@ -23,6 +23,18 @@
     quickshell
   ];
 
+  # 微信 (Flatpak) 字体。
+  # flatpak 沙箱里的 fontconfig 读不到宿主 ~/.config/fontconfig，
+  # 只会读它自己的 XDG_CONFIG_HOME（即 ~/.var/app/<appid>/config）下的
+  # fontconfig/fonts.conf，所以必须写到这里。
+  # 微信用 "Microsoft YaHei, PingFang SC, ... , Noto Sans CJK SC, sans-serif"
+  # 这套字体栈，Linux 上前几个都没有，会被替换成 DejaVu Sans，中英混排很怪。
+  # 下面把它整条指向 Noto Sans CJK SC；想换字体改文件里的字体名即可。
+  home.file.".var/app/com.tencent.WeChat/config/fontconfig/fonts.conf" = {
+    force = true;
+    source = ./assets/wechat-fonts.conf;
+  };
+
   # Fcitx5：英文键盘 + 雾凇拼音，默认使用雾凇。
   xdg.configFile."fcitx5/profile" = {
     force = true;
