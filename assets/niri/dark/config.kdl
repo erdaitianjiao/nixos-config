@@ -171,6 +171,8 @@ binds {
     Mod+Return { spawn "kitty"; }
     Mod+T      { spawn "kitty"; }
     Mod+D      { spawn "fuzzel"; }
+    // 切换 waybar / Quickshell(clavis-style)
+    Mod+Shift+B { spawn-sh "~/.config/niri/shell-switch.sh"; }
     Super+Alt+L allow-when-locked=true { spawn "swaylock"; }
     Mod+Shift+W { spawn-sh "~/.config/niri/wallpaper.sh next"; }
     Mod+Shift+S { spawn-sh "~/.config/niri/wallpaper.sh prev"; }

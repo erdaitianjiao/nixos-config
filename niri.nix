@@ -53,6 +53,7 @@ in {
     "niri/wallpaper.sh"          = exe "wallpaper.sh";
     "niri/bar-watch.sh"          = exe "bar-watch.sh";
     "niri/xwayland-dpi.sh"       = exe "xwayland-dpi.sh";
+    "niri/shell-switch.sh"       = exe "shell-switch.sh";
     "waybar/wifi-menu.sh"        = exe "wifi-menu.sh";
     "waybar/bluetooth-menu.sh"   = exe "bluetooth-menu.sh";
     "waybar/bluetooth-toggle.sh" = exe "bluetooth-toggle.sh";

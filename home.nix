@@ -18,6 +18,9 @@
     # 音乐
     go-musicfox          # 网易云 TUI 客户端
     # 通讯：微信已改用 Flathub 的 com.tencent.WeChat（不再用 nixpkgs 的 AppImage）
+
+    # ── Quickshell 实验 shell (clavis-style) ──
+    quickshell
   ];
 
   # Fcitx5：英文键盘 + 雾凇拼音，默认使用雾凇。
@@ -70,6 +73,13 @@
       echo 'gtk-im-module="fcitx"' >> "$HOME/.gtkrc-2.0"
     fi
   '';
+
+  # ── Quickshell 实验 shell (clavis-style) ──
+  # 用 niri 快捷键 Mod+Shift+B 在 waybar 和它之间切换（见 shell-switch.sh）
+  xdg.configFile."quickshell/clavis-style" = {
+    source = ./assets/quickshell/clavis-style;
+    recursive = true;
+  };
 
   # 与主力机一致：只使用 Classic UI，避免与 Plasma Kimpanel 重复显示候选窗。
   xdg.configFile."fcitx5/addon/classicui.conf" = {
