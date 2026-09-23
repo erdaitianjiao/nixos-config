@@ -20,6 +20,8 @@ Super + C              居中当前列
 Super + R              切换列宽
 Super + Minus/Equal    调列宽
 Print                  截图
+Super + Backspace      电源菜单
+Super + Shift + P      熄屏 (DPMS 关屏，动一下鼠标/键盘唤醒)
 Super + Shift + E      退出 niri
 Super + Alt + L        锁屏
 Ctrl + Space           切换输入法 (雾凇拼音)

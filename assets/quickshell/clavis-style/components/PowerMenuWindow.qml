@@ -14,6 +14,12 @@ PanelWindow {
 
     readonly property var actions: [
         {
+            "action": "screenoff",
+            "icon": "󰶐", // md-monitor_off
+            "label": "熄屏",
+            "danger": false
+        },
+        {
             "action": "lock",
             "icon": "󰌾", // md-lock
             "label": "锁定",
