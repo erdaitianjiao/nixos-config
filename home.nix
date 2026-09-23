@@ -23,6 +23,42 @@
     quickshell
   ];
 
+  # ── 闲置自动锁屏 / 熄屏（省电，swayidle）────────────────────
+  # niri 自身只有手动的 power-off-monitors（Mod+Shift+P），没有 idle 定时器；
+  # 自动熄屏交给 swayidle。niri 实现了 idle-inhibit，看视频 / 全屏播放时会自动
+  # 暂停计时，不会看到一半黑屏。
+  #
+  # 时间线（改数字即可调时长，单位秒）：
+  #   300s           → swaylock 锁屏
+  #   301s           → DPMS 关屏（晚 1 秒，等锁屏画面画完再关，避免闪一下）
+  #   睡眠前 / logind 锁会话 → 先锁屏
+  # 唤醒：动键盘 / 鼠标时 niri 自动点亮屏幕（见 niri 源码 should_activate_monitors），
+  # 所以不需要额外的 resume 命令。
+  #
+  # 它绑定到 niri.service（niri-session 启动的 systemd 用户服务），随会话启动/退出，
+  # 查看状态：systemctl --user status swayidle
+  #
+  # ⚠️ home-manager 给这个单元设的 PATH 只有 bash，所以下面命令必须写绝对路径，
+  #    否则会 command not found。
+  services.swayidle = {
+    enable = true;
+    systemdTargets = [ "niri.service" ];
+    timeouts = [
+      {
+        timeout = 300;
+        command = "${pkgs.swaylock}/bin/swaylock -f";
+      }
+      {
+        timeout = 301;
+        command = "${lib.getExe pkgs.niri} msg action power-off-monitors";
+      }
+    ];
+    events = {
+      before-sleep = "${pkgs.swaylock}/bin/swaylock -f";
+      lock = "${pkgs.swaylock}/bin/swaylock -f";
+    };
+  };
+
   # 微信 (Flatpak) 字体。
   # flatpak 沙箱里的 fontconfig 读不到宿主 ~/.config/fontconfig，
   # 只会读它自己的 XDG_CONFIG_HOME（即 ~/.var/app/<appid>/config）下的
