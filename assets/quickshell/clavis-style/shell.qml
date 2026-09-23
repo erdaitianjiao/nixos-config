@@ -70,6 +70,10 @@ ShellRoot {
         function powerAction(action) {
             app.powerMenuOpen = false;
             switch (action) {
+            case "screenoff":
+                // DPMS 关屏；动一下键盘/鼠标 niri 会自动点亮，且不锁屏。
+                Quickshell.execDetached(["niri", "msg", "action", "power-off-monitors"]);
+                break;
             case "lock":
                 Quickshell.execDetached(["swaylock"]);
                 break;
