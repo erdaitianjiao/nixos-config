@@ -75,7 +75,7 @@ ShellRoot {
                 Quickshell.execDetached(["niri", "msg", "action", "power-off-monitors"]);
                 break;
             case "lock":
-                Quickshell.execDetached(["swaylock"]);
+                locker.open();
                 break;
             case "logout":
                 Quickshell.execDetached(["niri", "msg", "action", "quit", "--skip-confirmation"]);
@@ -146,6 +146,12 @@ ShellRoot {
             }
         }
 
+        // ── 锁屏（Quickshell 会话锁，替代 hyprlock）──
+        // 触发：`qs ipc call lock open`，见 ~/.config/niri/lock.sh
+        Lock {
+            id: locker
+        }
+
         // ── IPC：Super+Backspace 走 `qs ipc call power-menu toggle` 触发 ──
         IpcHandler {
             target: "power-menu"
@@ -159,6 +165,17 @@ ShellRoot {
             }
             function toggle(): void {
                 app.togglePowerMenu(app.focusedOutput());
+            }
+        }
+
+        IpcHandler {
+            target: "lock"
+
+            function open(): string {
+                return locker.open();
+            }
+            function isLocked(): bool {
+                return locker.isLocked();
             }
         }
 

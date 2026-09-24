@@ -18,12 +18,14 @@ let
 in {
   xdg.configFile = {
     # ── 各程序配置（跟随主题）──
-    "niri/config.kdl".source   = "${assets}/${theme}/config.kdl";
-    "kitty/kitty.conf".source  = "${assets}/${theme}/kitty.conf";
-    "fuzzel/fuzzel.ini".source = "${assets}/${theme}/fuzzel.ini";
+    "niri/config.kdl".source     = "${assets}/${theme}/config.kdl";
+    "kitty/kitty.conf".source    = "${assets}/${theme}/kitty.conf";
+    "fuzzel/fuzzel.ini".source   = "${assets}/${theme}/fuzzel.ini";
+    "hypr/hyprlock.conf".source  = "${assets}/${theme}/hyprlock.conf";
 
     # ── 辅助脚本 ──
     "niri/keybinds.sh"          = exe "keybinds.sh";
+    "niri/lock.sh"              = exe "lock.sh";
     "niri/wallpaper.sh"         = exe "wallpaper.sh";
     "niri/bar-watch.sh"         = exe "bar-watch.sh";
     "niri/xwayland-dpi.sh"      = exe "xwayland-dpi.sh";

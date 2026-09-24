@@ -159,6 +159,8 @@ in {
   # ─── niri 会话（Wayland，SDDM 里可选；不影响 Plasma）────────────
   programs.niri.enable = true;
   hardware.i2c.enable = true;   # ddcutil 调外接屏亮度需要 i2c
+  # hyprlock 锁屏鉴权用的 PAM 服务（缺了会退回 su）
+  security.pam.services.hyprlock = { };
   # 默认仍进 Plasma；登录界面会话菜单里可选 Niri
   services.displayManager.defaultSession = pkgs.lib.mkForce "plasma";
 
@@ -273,7 +275,7 @@ in {
     whitesur-kde
 
     # niri 桌面 / 状态栏 / 启动器 / 通知 / 工具
-    niri kitty fuzzel swaybg swaylock
+    niri kitty fuzzel swaybg hyprlock
     brightnessctl playerctl wl-clipboard pavucontrol xwayland-satellite ddcutil
   ];
 
