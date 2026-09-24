@@ -165,7 +165,7 @@ binds {
     Mod+D      { spawn "fuzzel"; }
     // 电源菜单（Quickshell 的 IPC；没跑 Quickshell 时静默无操作）
     Mod+BackSpace { spawn-sh "~/.config/niri/power-menu.sh"; }
-    Super+Alt+L allow-when-locked=true { spawn "swaylock"; }
+    Super+Alt+L allow-when-locked=true { spawn-sh "~/.config/niri/lock.sh"; }
     Mod+Shift+W { spawn-sh "~/.config/niri/wallpaper.sh next"; }
     Mod+Shift+S { spawn-sh "~/.config/niri/wallpaper.sh prev"; }
     Mod+Shift+Y { spawn-sh "~/.config/niri/bar-watch.sh restart"; }
