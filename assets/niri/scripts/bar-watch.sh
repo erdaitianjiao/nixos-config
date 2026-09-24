@@ -10,7 +10,9 @@
 #   bar-watch.sh            # 常驻（spawn-at-startup 用）
 #   bar-watch.sh restart    # 立即重启 bar + 重贴壁纸
 set -uo pipefail
-export PATH="$HOME/.local/bin:/usr/bin:/bin"
+# NixOS 没有 /usr/bin/sleep、pkill 等；只写 /usr/bin:/bin 会导致 restart 静默失败、
+# watch 循环里的 sleep 报 command not found。这里补上系统 / home-manager 的 profile。
+export PATH="$HOME/.local/bin:/run/current-system/sw/bin:/etc/profiles/per-user/${USER:-$(id -un)}/bin:/usr/bin:/bin"
 
 apply_wallpaper() {
 	local f="$HOME/.cache/niri-wallpaper" pic

@@ -281,6 +281,8 @@ FocusScope {
                     height: dotsView.height
 
                     Rectangle {
+                        id: dotCircle
+
                         anchors.centerIn: parent
                         width: dotsView.dotSize
                         height: width
@@ -292,7 +294,10 @@ FocusScope {
 
                         NumberAnimation {
                             id: popIn
-                            target: parent
+
+                            // 必须显式指向 dotCircle；写 target: parent 会被解析成 delegate 的
+                            // Item，动画就跑到了错的物体上，圆圈永远停在 scale:0/opacity:0。
+                            target: dotCircle
                             properties: "scale,opacity"
                             to: 1
                             duration: 200
