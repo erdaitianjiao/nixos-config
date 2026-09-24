@@ -6,6 +6,10 @@
 #
 # Quickshell 的锁屏通过 IPC 触发：`qs ipc call lock open`。
 # 用 --pid 精确选中正在跑的 clavis-style 实例，避免匹配到抓拍子进程。
+#
+# ⚠️ `qs ipc` 即使目标/方法不存在也返回退出码 0（只打印 “Target not found.”），
+#    所以必须检查输出里有没有 LOCKED，不能只看退出码，否则 Quickshell 没跑时
+#    会误判成功、永远不回退到 hyprlock。
 set -u
 export PATH="$HOME/.local/bin:/etc/profiles/per-user/${USER:-$(id -un)}/bin:/run/current-system/sw/bin:/usr/bin:/bin"
 
@@ -18,8 +22,10 @@ if [ "${1:-}" = "--is-locked" ]; then
     case "$out" in *true*) exit 0 ;; *) exit 1 ;; esac
 fi
 
-if [ -n "${pid:-}" ] && qs ipc --pid "$pid" call lock open >/dev/null 2>&1; then
-    exit 0
+# 触发上锁：只有输出里出现 LOCKED / ALREADY_LOCKED 才算成功。
+if [ -n "${pid:-}" ]; then
+    out="$(qs ipc --pid "$pid" call lock open 2>/dev/null)" || out=""
+    case "$out" in *LOCKED*) exit 0 ;; esac
 fi
 
 # 回退：Quickshell 未运行 / IPC 失败时用 hyprlock，保证不会漏锁。
