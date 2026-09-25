@@ -58,8 +58,10 @@ PanelWindow {
     ]
 
     property int selectedIndex: 0
+    property bool closing: false
 
-    visible: shown
+    visible: shown || closing
+
     color: "transparent"
     exclusiveZone: 0
     WlrLayershell.layer: WlrLayer.Overlay
@@ -76,8 +78,11 @@ PanelWindow {
 
     onShownChanged: {
         if (shown) {
+            root.closing = false;
             root.selectedIndex = 0;
             keyCatcher.forceActiveFocus();
+        } else if (root.visible) {
+            root.closing = true;
         }
     }
 
@@ -96,8 +101,17 @@ PanelWindow {
 
     // 暗背景（点击关闭）
     Rectangle {
+        id: backdrop
+
         anchors.fill: parent
         color: Qt.rgba(0, 0, 0, 0.45)
+        opacity: root.shown ? 1 : 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: root.shown ? root.shell.durEnter : root.shell.durExit
+            }
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -108,6 +122,26 @@ PanelWindow {
     // 居中卡片
     Rectangle {
         id: card
+
+        opacity: root.shown ? 1 : 0
+        scale: root.shown ? 1 : 0.97
+        onOpacityChanged: if (!root.shown && opacity === 0) root.closing = false
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: root.shown ? root.shell.durEnter : root.shell.durExit
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: root.shell.easeEnter
+            }
+        }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: root.shown ? root.shell.durEnter : root.shell.durExit
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: root.shell.easeEnter
+            }
+        }
 
         anchors.centerIn: parent
         width: row.implicitWidth + 48
