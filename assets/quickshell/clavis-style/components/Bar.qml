@@ -97,6 +97,11 @@ PanelWindow {
             Layout.alignment: Qt.AlignVCenter
         }
 
+        NotifBell {
+            shell: bar.shell
+            Layout.alignment: Qt.AlignVCenter
+        }
+
         Power {
             shell: bar.shell
             screenName: bar.screenName
