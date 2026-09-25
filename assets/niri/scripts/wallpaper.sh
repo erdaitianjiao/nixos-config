@@ -43,11 +43,9 @@ case "$mode" in
 esac
 
 pic="${pics[$idx]}"
-# ⚠️ home-manager 的 makeBinaryWrapper 会把 comm 改成 .swaybg-wrapped，
-# 所以 `pkill -x swaybg` 匹配不到 —— 旧实例会一直堆积（曾攒到 12 个，
-# 两块屏就是 24 个背景层）。两种名字各杀一遍。
-pkill -x .swaybg-wrapped 2>/dev/null || true
-pkill -x swaybg 2>/dev/null || true
-nohup swaybg -i "$pic" -m fill >/dev/null 2>&1 &
-echo "$pic" > "$state"
+# 壁纸现在由 Quickshell 渲染（components/Wallpaper.qml）：本脚本只负责
+# 挑图 + 把路径写进状态文件，它 watchChanges 到之后自己交叉淡入。
+# 不再起 swaybg —— 顺便永久避开 home-manager wrapper 把 comm 改成
+# .swaybg-wrapped、导致 `pkill -x swaybg` 匹配不到、进程越攒越多的问题。
+printf '%s\n' "$pic" > "$state"
 echo "$pic"
