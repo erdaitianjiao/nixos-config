@@ -37,6 +37,15 @@ ShellRoot {
         readonly property int margin: 8
         readonly property int pillH: 28
         readonly property int pillRadius: 14
+
+        // ── 动效 token（借 Clavis KeystoneMotion 的思路，简化版）──
+        readonly property int durEnter: 220
+        readonly property int durExit: 140
+        readonly property int durHover: 150
+        readonly property int durMove: 220
+        // cubic-bezier 控制点（QML easing.bezierCurve）
+        readonly property var easeEnter: [0.16, 0.68, 0.36, 1, 1, 1]
+        readonly property var easeExit: [0.4, 0, 1, 1]
         readonly property string fontFam: "CaskaydiaCove Nerd Font"
 
         // ── niri 状态 ──

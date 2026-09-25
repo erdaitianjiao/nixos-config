@@ -99,13 +99,25 @@ PanelWindow {
     onQueryChanged: root.chosen = 0
     onChosenChanged: list.positionViewAtIndex(root.chosen, ListView.Contain)
 
-    visible: shell.launcherOpen && onThisScreen
+    // 关闭时先播完退场动画再真正隐藏窗口
+    readonly property bool shown: shell.launcherOpen && onThisScreen
+    property bool closing: false
+
+    visible: shown || closing
+
+    onShownChanged: {
+        if (shown)
+            root.closing = false;
+        else if (root.visible)
+            root.closing = true;
+    }
+
     color: "transparent"
     exclusiveZone: 0
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qs-clavis-launcher"
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     anchors {
         top: true
         left: true
@@ -115,8 +127,17 @@ PanelWindow {
 
     // 点背景关闭
     Rectangle {
+        id: backdrop
+
         anchors.fill: parent
         color: Qt.rgba(0, 0, 0, 0.35)
+        opacity: root.shown ? 1 : 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: root.shown ? root.shell.durEnter : root.shell.durExit
+            }
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -126,6 +147,27 @@ PanelWindow {
 
     Rectangle {
         id: card
+
+        opacity: root.shown ? 1 : 0
+        scale: root.shown ? 1 : 0.98
+        transformOrigin: Item.Top
+        onOpacityChanged: if (!root.shown && opacity === 0) root.closing = false
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: root.shown ? root.shell.durEnter : root.shell.durExit
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: root.shell.easeEnter
+            }
+        }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: root.shown ? root.shell.durEnter : root.shell.durExit
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: root.shell.easeEnter
+            }
+        }
 
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
