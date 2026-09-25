@@ -162,9 +162,9 @@ binds {
     // ── 启动应用 ──
     Mod+Return { spawn "kitty"; }
     Mod+T      { spawn "kitty"; }
-    Mod+D      { spawn "fuzzel"; }
+    Mod+D      { spawn-sh "~/.config/niri/qs-ipc.sh launcher toggle"; }
     // 电源菜单（Quickshell 的 IPC；没跑 Quickshell 时静默无操作）
-    Mod+BackSpace { spawn-sh "~/.config/niri/power-menu.sh"; }
+    Mod+BackSpace { spawn-sh "~/.config/niri/qs-ipc.sh power-menu toggle"; }
     Super+Alt+L allow-when-locked=true { spawn-sh "~/.config/niri/lock.sh"; }
     Mod+Shift+W { spawn-sh "~/.config/niri/wallpaper.sh next"; }
     Mod+Shift+S { spawn-sh "~/.config/niri/wallpaper.sh prev"; }

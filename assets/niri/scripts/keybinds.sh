@@ -4,7 +4,7 @@
 
 cat <<'EOF' | fuzzel --dmenu --prompt "󰌌  Keys "
 Super + Enter / T      打开终端 (kitty)
-Super + D              应用启动器 (fuzzel)
+Super + D              应用启动器 (Quickshell)
 Super + O              窗口总览
 Super + Q              关闭窗口
 Super + H/J/K/L        聚焦 左/下/上/右
