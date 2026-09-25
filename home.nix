@@ -23,17 +23,15 @@
     quickshell
   ];
 
-  # ── 闲置自动锁屏（swayidle）──────────────────────────────
-  # niri 自身只有手动的 power-off-monitors（Mod+Shift+P），没有 idle 定时器；
-  # 自动熄屏交给 swayidle。niri 实现了 idle-inhibit，看视频 / 全屏播放时会自动
-  # 暂停计时，不会看到一半黑屏。
+  # ── 闲置自动锁屏 / 熄屏：全部关掉，改为纯手动 ──────────────
+  # 现在 idle 什么都不做 —— 既不自动锁屏，也不自动熄屏：
+  #   锁屏   → Super+Alt+L，或电源菜单「锁屏」
+  #   熄屏   → Mod+Shift+P，或电源菜单「熄屏」
+  # 只保留两个**非 idle** 的钩子：睡前锁屏、logind 锁会话时锁屏。
   #
-  # 时间线（改数字即可调时长，单位秒）：
-  #   300s           → 锁屏（Quickshell 会话锁，见 ~/.config/niri/lock.sh）
-  #   （自动熄屏已关闭 → 熄灭只能主动：Mod+Shift+P 或电源菜单「熄屏」）
-  #   睡眠前 / logind 锁会话 → 先锁屏
-  # 唤醒：动键盘 / 鼠标时 niri 自动点亮屏幕（见 niri 源码 should_activate_monitors），
-  # 所以不需要额外的 resume 命令。
+  # 想恢复自动锁屏 / 熄屏：往 timeouts 里加回去就行，例如
+  #   { timeout = 300; command = ".../lock.sh &"; }
+  #   { timeout = 301; command = ".../niri msg action power-off-monitors"; }
   #
   # 它绑定到 niri.service（niri-session 启动的 systemd 用户服务），随会话启动/退出，
   # 查看状态：systemctl --user status swayidle
@@ -43,15 +41,8 @@
   services.swayidle = {
     enable = true;
     systemdTargets = [ "niri.service" ];
-    timeouts = [
-      {
-        timeout = 300;
-        # Quickshell 会话锁（默认风格），入口脚本内部会走 IPC；
-        # swayidle 带了 -w（等命令退出），所以 & 到后台，避免卡住事件循环。
-        command = "${config.home.homeDirectory}/.config/niri/lock.sh &";
-      }
-      # 自动熄屏（原 301s → power-off-monitors）已关闭，改为只能主动熄屏。
-    ];
+    # 空 = 完全不自动锁屏 / 熄屏，只能手动
+    timeouts = [ ];
     events = {
       # 睡前：后台起锁屏，再等 1 秒确保锁屏已生效才放行挂起。
       before-sleep = "${config.home.homeDirectory}/.config/niri/lock.sh & ${pkgs.coreutils}/bin/sleep 1";
