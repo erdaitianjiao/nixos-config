@@ -144,6 +144,25 @@ ShellRoot {
             onTriggered: app.osdArmed = true
         }
 
+        // ── 通知中心（右侧抽屉）──
+        property bool notifCenterOpen: false
+        property string notifCenterScreen: ""
+
+        function openNotifCenter() {
+            app.notifCenterScreen = app.focusedOutput();
+            app.notifCenterOpen = true;
+            notifs.markRead();
+        }
+        function closeNotifCenter() {
+            app.notifCenterOpen = false;
+        }
+        function toggleNotifCenter() {
+            if (app.notifCenterOpen)
+                app.closeNotifCenter();
+            else
+                app.openNotifCenter();
+        }
+
         // 音量：监听 PipeWire 默认 sink（覆盖 wpctl 快捷键 / 滑块 / 其它程序）
         readonly property var audioNode: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio : null
         readonly property real audioVolume: audioNode ? audioNode.volume : -1
@@ -275,6 +294,20 @@ ShellRoot {
             }
         }
 
+        IpcHandler {
+            target: "notif-center"
+
+            function open(): void {
+                app.openNotifCenter();
+            }
+            function close(): void {
+                app.closeNotifCenter();
+            }
+            function toggle(): void {
+                app.toggleNotifCenter();
+            }
+        }
+
         // ── 每个输出一条 bar ──
         Variants {
             model: Quickshell.screens
@@ -338,12 +371,28 @@ ShellRoot {
             }
         }
 
+        // ── 通知中心 ──
+        Variants {
+            model: Quickshell.screens
+
+            NotifCenter {
+                required property var modelData
+
+                screen: modelData
+                shell: app
+                manager: notifs
+            }
+        }
+
         // ── 通知（接管 org.freedesktop.Notifications，需先停 mako）──
         NotificationManager {
             id: notifs
 
             shell: app
         }
+
+        // bar 的铃铛用（未读数）
+        readonly property int notifUnread: notifs.unread
 
         Variants {
             model: Quickshell.screens
