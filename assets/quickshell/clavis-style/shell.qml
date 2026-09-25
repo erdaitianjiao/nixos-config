@@ -8,6 +8,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.Pipewire
 import "components"
 
 ShellRoot {
@@ -113,6 +114,81 @@ ShellRoot {
                 app.closeLauncher();
             else
                 app.openLauncher();
+        }
+
+        // ── OSD（音量 / 亮度按键提示）──
+        property bool osdVisible: false
+        property string osdKind: "" // "volume" | "brightness"
+        property real osdValue: 0
+        property string osdScreen: ""
+        property bool osdArmed: false // 启动后过几秒才开始弹，避免初始化时误弹
+
+        function showOsd(kind, value) {
+            app.osdKind = kind;
+            app.osdValue = Math.max(0, Math.min(100, value));
+            app.osdScreen = app.focusedOutput();
+            app.osdVisible = true;
+            osdHideTimer.restart();
+        }
+
+        Timer {
+            id: osdHideTimer
+
+            interval: 1500
+            onTriggered: app.osdVisible = false
+        }
+
+        Timer {
+            interval: 2500
+            running: true
+            onTriggered: app.osdArmed = true
+        }
+
+        // 音量：监听 PipeWire 默认 sink（覆盖 wpctl 快捷键 / 滑块 / 其它程序）
+        readonly property var audioNode: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio : null
+        readonly property real audioVolume: audioNode ? audioNode.volume : -1
+        readonly property bool audioMuted: audioNode ? audioNode.muted : false
+
+        onAudioVolumeChanged: {
+            if (app.osdArmed && app.audioVolume >= 0)
+                app.showOsd("volume", app.audioVolume * 100);
+        }
+        onAudioMutedChanged: {
+            if (app.osdArmed && app.audioNode)
+                app.showOsd("volume", app.audioMuted ? 0 : Math.max(0, app.audioVolume) * 100);
+        }
+
+        // 亮度：轮询 brightnessctl（sysfs 没有标准的变更信号）
+        property real lastBrightness: -1
+
+        Process {
+            id: osdBrightness
+
+            command: ["brightnessctl", "-m"]
+            stdout: StdioCollector {
+                onStreamFinished: {
+                    const parts = text.trim().split(",");
+                    if (parts.length < 4)
+                        return;
+                    const p = parseFloat(String(parts[3]).replace("%", ""));
+                    if (isNaN(p))
+                        return;
+                    if (app.osdArmed && app.lastBrightness >= 0 && Math.abs(p - app.lastBrightness) >= 1)
+                        app.showOsd("brightness", p);
+                    app.lastBrightness = p;
+                }
+            }
+        }
+
+        Timer {
+            interval: 600
+            running: true
+            repeat: true
+            triggeredOnStart: true
+            onTriggered: {
+                if (!osdBrightness.running)
+                    osdBrightness.running = true;
+            }
         }
 
         function focusWorkspace(id) {
@@ -243,6 +319,18 @@ ShellRoot {
             model: Quickshell.screens
 
             Launcher {
+                required property var modelData
+
+                screen: modelData
+                shell: app
+            }
+        }
+
+        // ── 音量 / 亮度 OSD ──
+        Variants {
+            model: Quickshell.screens
+
+            Osd {
                 required property var modelData
 
                 screen: modelData
