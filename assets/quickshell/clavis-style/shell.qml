@@ -329,6 +329,20 @@ ShellRoot {
             }
         }
 
+        // ── 壁纸（每个输出一个背景层，替代 swaybg）──
+        // 放在 bar 后面：让 Wayland 输出先就绪，否则两个背景层都会被
+        // 合成器丢到同一个输出上（niri 里表现为 DP-1 x2、eDP-1 没有）。
+        Variants {
+            model: Quickshell.screens
+
+            Wallpaper {
+                required property var modelData
+
+                screen: modelData
+                shell: app
+            }
+        }
+
         // ── IPC：Mod+D 走 `qs ipc call launcher toggle` 触发 ──
         IpcHandler {
             target: "launcher"
