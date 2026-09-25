@@ -95,6 +95,26 @@ ShellRoot {
             }
         }
 
+        // ── 启动器（Mod+D）──
+        property bool launcherOpen: false
+        property string launcherScreen: ""
+
+        function openLauncher() {
+            // 和电源菜单一样：打开时把屏幕名固定，否则 focusedOutput()
+            // 每 500ms 轮询一变，窗口会在两块屏之间跳。
+            app.launcherScreen = app.focusedOutput();
+            app.launcherOpen = true;
+        }
+        function closeLauncher() {
+            app.launcherOpen = false;
+        }
+        function toggleLauncher() {
+            if (app.launcherOpen)
+                app.closeLauncher();
+            else
+                app.openLauncher();
+        }
+
         function focusWorkspace(id) {
             Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", String(id)]);
         }
@@ -191,11 +211,38 @@ ShellRoot {
             }
         }
 
+        // ── IPC：Mod+D 走 `qs ipc call launcher toggle` 触发 ──
+        IpcHandler {
+            target: "launcher"
+
+            function open(): void {
+                app.openLauncher();
+            }
+            function close(): void {
+                app.closeLauncher();
+            }
+            function toggle(): void {
+                app.toggleLauncher();
+            }
+        }
+
         // ── 每个输出一个电源菜单（全屏覆盖）──
         Variants {
             model: Quickshell.screens
 
             PowerMenuWindow {
+                required property var modelData
+
+                screen: modelData
+                shell: app
+            }
+        }
+
+        // ── 启动器 ──
+        Variants {
+            model: Quickshell.screens
+
+            Launcher {
                 required property var modelData
 
                 screen: modelData
