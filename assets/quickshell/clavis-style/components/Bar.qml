@@ -56,6 +56,11 @@ PanelWindow {
             Layout.alignment: Qt.AlignVCenter
         }
 
+        Media {
+            shell: bar.shell
+            Layout.alignment: Qt.AlignVCenter
+        }
+
         ActiveWindow {
             shell: bar.shell
             Layout.fillWidth: true
