@@ -48,4 +48,20 @@ pic="${pics[$idx]}"
 # 不再起 swaybg —— 顺便永久避开 home-manager wrapper 把 comm 改成
 # .swaybg-wrapped、导致 `pkill -x swaybg` 匹配不到、进程越攒越多的问题。
 printf '%s\n' "$pic" > "$state"
+
+# 如果当前跑的是上游 Clavis shell，也让它切到同一张 —— Clavis 有自己的
+# wallpaper 服务（它渲染、自己存 config），不会读我们这个状态文件。
+# 两者靠 cmdline 区分：clavis-style（我们的） vs clavis（上游）。
+# 先匹配 clavis-style，否则它也会命中 *clavis*。
+shell_cmd="$(pgrep -af quickshell 2>/dev/null | grep -v pgrep | head -1)"
+case "$shell_cmd" in
+    *clavis-style*) ;;
+    *clavis*)
+        pid="$(pgrep -x .quickshell-wra 2>/dev/null | head -1)"
+        if [ -n "$pid" ]; then
+            qs ipc --pid "$pid" call wallpaper set "$pic" >/dev/null 2>&1 || true
+        fi
+        ;;
+esac
+
 echo "$pic"
