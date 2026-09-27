@@ -43,16 +43,17 @@ layout {
 
     default-column-width { proportion 0.5; }
 
-    // 用 border 代替 focus-ring，更简洁
-    focus-ring {
+    // 窗口边框：关掉（原来 light 是 Matcha 绿 #4f9d57、dark 是 Tokyo Night 蓝
+    // #7aa2f7 的 2px 边框）。
+    // ⚠️ niri 就靠这个边框提示哪个窗口是焦点，两个都关掉后【没有焦点提示】了。
+    // 想要一个不显眼又不干扰观感的提示，可以改成：
+    //   focus-ring { width 1; active-color "#3d4a44"; inactive-color "#00000000"; }
+    border {
         off
     }
 
-    border {
-        width 2
-        active-color "#4f9d57"   // Matcha green
-        inactive-color "#c2d3ae" // 浅绿灰
-        urgent-color "#d86666"   // red
+    focus-ring {
+        off
     }
 
     shadow {

@@ -43,16 +43,14 @@ layout {
 
     default-column-width { proportion 0.5; }
 
-    // 用 border 代替 focus-ring，更简洁
-    focus-ring {
+    // 窗口边框：关掉（原来 dark 是 Tokyo Night 蓝 #7aa2f7 的 2px 边框）
+    // ⚠️ 关掉后【没有焦点提示】了，想恢复见 light 主题里的注释说明。
+    border {
         off
     }
 
-    border {
-        width 2
-        active-color "#7aa2f7"   // Tokyo Night blue
-        inactive-color "#3b4261" // 暗蓝灰
-        urgent-color "#f7768e"   // red
+    focus-ring {
+        off
     }
 
     shadow {
