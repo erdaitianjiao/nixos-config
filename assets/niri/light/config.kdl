@@ -171,6 +171,8 @@ binds {
     Mod+Shift+W { spawn-sh "~/.config/niri/wallpaper.sh next"; }
     Mod+Shift+S { spawn-sh "~/.config/niri/wallpaper.sh prev"; }
     Mod+Shift+Y { spawn-sh "~/.config/niri/bar-watch.sh restart"; }
+    // 在「自研 clavis-style bar」和「上游 Clavis shell」之间切换
+    Mod+Shift+C { spawn-sh "~/.config/niri/clavis.sh toggle"; }
 
     // ── 窗口焦点 ──
     Mod+Q repeat=false { close-window; }

@@ -1,6 +1,6 @@
 # NixOS 系统级配置 —— 桌面 / 服务 / 网络 / 系统软件
 # 用户级配置(个人软件 / dotfiles)见 home.nix
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 let
   cc-switch-src = pkgs.fetchurl {
@@ -234,6 +234,8 @@ in {
   home-manager = {
     useGlobalPkgs = true;       # 复用系统 nixpkgs,避免重复实例化
     useUserPackages = true;     # 用户包装到用户 profile
+    # 让 home.nix / clavis.nix 能取到 flake inputs（clavis.nix 用 m3shapes）
+    extraSpecialArgs = { inherit inputs; };
     users.tianjiao = import ./home.nix;
   };
 

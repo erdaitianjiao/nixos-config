@@ -1,5 +1,5 @@
 { config, lib, pkgs, ... }: {
-  imports = [ ./niri.nix ];
+  imports = [ ./niri.nix ./clavis.nix ];
 
   home.username = "tianjiao";
   home.homeDirectory = "/home/tianjiao";
