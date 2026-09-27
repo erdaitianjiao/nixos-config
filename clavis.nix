@@ -53,8 +53,15 @@ in {
     clavis
     m3shapes
 
-    # 图标字体：Clavis 的 UI 全靠 Material Symbols（Rounded/Outlined）
+    # 图标字体：Clavis 的 UI 全靠 Material Symbols（Rounded/Outlined，
+    # 图标是用名字当文字 + 连字渲染的）
     pkgs.material-symbols
+    # UI 正文字体。上游默认要 "LXGW WenKai GB Screen"（霞鹜文楷 GB Screen），
+    # nixpkgs 只有 screen 版（族名 "LXGW WenKai Screen"），所以 Clavis 里已经
+    # 把 theme.fonts.ui 改成这个（存在 ~/.config/clavis/config.json，是它自己
+    # 管理的运行时配置）。等宽字体用的是 JetBrainsMono Nerd Font，
+    # 已由系统 fonts.packages 提供。
+    pkgs.lxgw-wenkai-screen
 
     # QML 运行时模块（QML2_IMPORT_PATH 里同时也要有）
     pkgs.qt6.qt5compat
