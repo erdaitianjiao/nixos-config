@@ -28,5 +28,6 @@ Super + Alt + L        锁屏
 Ctrl + Space           切换输入法 (雾凇拼音)
 Super + Shift + B      切换日/夜主题
 Super + Shift + W      下一张壁纸
+Super + Shift + C      在自研 bar 与上游 Clavis shell 之间切换
 Super + Shift + S      上一张壁纸
 EOF
