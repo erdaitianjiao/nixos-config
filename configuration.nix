@@ -69,7 +69,7 @@ in {
   networking.hostName = "nixos";
   networking.networkmanager.enable = true;
   networking.firewall = {
-    trustedInterfaces = [ "docker0" ];  # 信任 docker 默认网桥, 放行容器出站流量
+    trustedInterfaces = [ "docker0" "tailscale0" ];  # 信任 docker 网桥 & tailscale 接口, 放行其流量
     allowedTCPPorts = [ 53317 ];  # LocalSend
     allowedUDPPorts = [ 53317 ];
     # 局域网全部放行
@@ -176,6 +176,7 @@ in {
 
   # ─── 服务 ──────────────────────────────────────────────────
   services.openssh.enable = true;     # SSH
+  services.tailscale.enable = true;   # Tailscale（WireGuard mesh VPN / 远程隧道）
   services.udev.packages = [ pkgs.brightnessctl ];  # 允许普通用户调亮度
   services.printing.enable = true;    # 打印 (CUPS)
   services.flatpak.enable = true;     # Flatpak
