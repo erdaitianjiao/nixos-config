@@ -523,6 +523,9 @@ Variants {
             anchors.bottomMargin: keystoneWindow.bottomEdge ? styleSurface.edgeMargin : 0
             anchors.leftMargin: keystoneWindow.leftEdge ? styleSurface.edgeMargin : 0
             anchors.rightMargin: keystoneWindow.rightEdge ? styleSurface.edgeMargin : 0
+            // 本地改动：灵动岛默认水平居中，会压到右上角的状态图标簇，
+            // 往左偏一点让日期与图标分开（记录见 UPSTREAM.md 的「本地改动」）。
+            anchors.horizontalCenterOffset: -100
             width: styleSurface.fullDisplay && fullFrame.item ? fullFrame.item.implicitWidth : root.width + (
                                                                     keystoneWindow.horizontalEdge
                                                                     ? keystoneWindow.edgeCurveAlong * 2 : 0)
