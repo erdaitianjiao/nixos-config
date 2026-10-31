@@ -158,11 +158,15 @@ hotkey-overlay {
 // ── 快捷键 ───────────────────────────────────────────
 binds {
     // 快捷键速查（fuzzel 主题化版，替代自带 overlay）
-    Mod+Shift+Slash { spawn-sh "~/.config/niri/keybinds.sh"; }
+    Mod+Shift+F1 { spawn-sh "~/.config/niri/keybinds.sh"; }
 
     // ── 启动应用 ──
     Mod+Return { spawn "kitty"; }
     Mod+T      { spawn "kitty"; }
+
+    // 循环调节 kitty 背景透明度 0.50 → 0.30 → 0.90 → 0.70 → 0.50
+    // （kitty 用 remote control 调，脚本见 ~/.config/niri/kitty-opacity.sh）
+    Mod+Shift+Slash { spawn-sh "~/.config/niri/kitty-opacity.sh"; }
     Mod+D      { spawn-sh "~/.config/niri/qs-ipc.sh launcher toggle"; }
     // 通知中心
     Mod+N      { spawn-sh "~/.config/niri/qs-ipc.sh notif-center toggle"; }
