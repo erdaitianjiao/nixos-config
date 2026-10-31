@@ -218,6 +218,10 @@ in {
     };
   };
 
+  # Docker 里的 CUDA 支持：ComfyUI 等直接跑官方镜像（自带 runtime），
+  # 不进 Nix 构建。ollama 走原生 ollama-cuda 包。
+  hardware.nvidia-container-toolkit.enable = true;
+
   # ─── Shell (Zsh + Oh My Zsh + powerlevel10k) ───────────────
   programs.zsh = {
     enable = true;
