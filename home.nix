@@ -1,5 +1,5 @@
 { config, lib, pkgs, ... }: {
-  imports = [ ./niri.nix ];
+  imports = [ ./niri.nix ./gaming.nix ];
 
   home.username = "tianjiao";
   home.homeDirectory = "/home/tianjiao";
@@ -22,14 +22,7 @@
     # ── Quickshell 实验 shell (clavis-style) ──
     quickshell
 
-    # ── 游戏开发 (game-dev 分支) ──
-    godot                # Godot 4 引擎（GDScript）
-    godot-mono           # Godot 4 + C#/.NET 8（自带 dotnet sdk，命令名 godot-mono）
-    blender              # 3D 建模 / 动画 / 导出 glTF
-    krita                # 2D 绘制
-    tiled                # 瓦片地图编辑器
-    libresprite          # 像素画
-    # aseprite           # 像素画（unfree，想要再开）
+    # ── 游戏开发见 gaming.nix（独立模块）──
   ];
 
   # ── 闲置自动锁屏 / 熄屏（省电，swayidle）────────────────────
