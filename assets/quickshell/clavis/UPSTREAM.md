@@ -41,3 +41,7 @@ rsync -a --exclude=.git --delete /tmp/quickshell-inspect/ assets/quickshell/clav
 - `Modules/Bar/HorizontalBarWindow.qml` / `VerticalBarWindow.qml`：bar 的
   `overlay` 模式原来用 `exclusiveZone: 0`，niri 仍按 surface 高度预留（窗口被
   推下 52px）；改成 `-1` 才真正不占 work area。
+- `scripts/system/niri_config.py`：`/proc/<pid>/environ` 读不到时（NixOS 受限
+  环境报 Errno 13）不再抛错，按非 nested 会话处理；`/proc` 遍历失败时退回
+  `XDG_CONFIG_HOME/niri/config.kdl`。否则快捷键速查和 niri 设置页拿不到
+  bindings。

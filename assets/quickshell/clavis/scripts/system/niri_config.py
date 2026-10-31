@@ -70,7 +70,12 @@ def main_path(request):
         return Path(configured).expanduser().absolute()
     # A known custom session config takes precedence over the XDG default.
     candidates = set()
-    for entry in Path('/proc').iterdir():
+    # 本地改动：/proc 遍历在受限环境下可能失败，失败就退回 XDG 默认路径。
+    try:
+        proc_entries = list(Path('/proc').iterdir())
+    except OSError:
+        proc_entries = []
+    for entry in proc_entries:
         if not entry.name.isdigit():
             continue
         try:
@@ -328,7 +333,13 @@ def session_nested():
         return False
     # Inspect only the names needed by niri's backend selection. No environment
     # values are returned, logged, or persisted.
-    names = {entry.split(b'=', 1)[0] for entry in (process / 'environ').read_bytes().split(b'\0')}
+    # 本地改动：NixOS/受限环境下 /proc/<pid>/environ 可能不可读（Errno 13），
+    # 读不到时按普通（非 nested）会话处理，否则整个 status 会直接报错、
+    # 快捷键速查全空。
+    try:
+        names = {entry.split(b'=', 1)[0] for entry in (process / 'environ').read_bytes().split(b'\0')}
+    except OSError:
+        return False
     return bool(names & {b'DISPLAY', b'WAYLAND_DISPLAY', b'WAYLAND_SOCKET'})
 
 
