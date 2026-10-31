@@ -318,3 +318,18 @@ binds {
     Ctrl+Alt+Delete { quit; }
     Mod+Shift+P { power-off-monitors; }
 }
+
+// ── Clavis 管理的片段 ────────────────────────────────────────
+// 主配置由 home-manager 生成（指向 /nix/store 的只读软链），Clavis 自己
+// 改不了 config.kdl；但 niri 的相对 include 是按本软链所在目录解析的，
+// 所以这里静态 include，fragment 由 Clavis 写进 ~/.config/niri/clavis/。
+// optional=true：首次运行前片段还不存在，niri 会跳过而不是报错。
+//
+// 故意不含 binds：Clavis 默认的 Mod+N / Mod+Shift+W / Mod+BackSpace 与
+// 上面自研 bar 的键位重复，niri 会拒绝重复绑定。
+include "clavis/effects.kdl" optional=true
+include "clavis/layer-rules.kdl" optional=true
+include "clavis/cursor.kdl" optional=true
+include "clavis/outputs.kdl" optional=true
+include "clavis/minimize-animation.kdl" optional=true
+include "clavis/hot-corners.kdl" optional=true

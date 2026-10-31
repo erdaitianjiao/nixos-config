@@ -178,6 +178,12 @@ in {
   services.openssh.enable = true;     # SSH
   services.tailscale.enable = true;   # Tailscale（WireGuard mesh VPN / 远程隧道）
   services.udev.packages = [ pkgs.brightnessctl ];  # 允许普通用户调亮度
+  # Clavis 的键盘状态（CapsLock / NumLock）要读整个 evdev 键盘节点；
+  # 这条来自上游 key-cli 的 71-clavis-keyboard-leds.rules，TAG+=uaccess
+  # 只对当前活跃的本地用户生效。
+  services.udev.extraRules = ''
+    SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_INPUT_KEYBOARD}=="1", ATTRS{capabilities/led}=="?*", ATTRS{capabilities/led}!="0", TAG+="uaccess"
+  '';
   services.printing.enable = true;    # 打印 (CUPS)
   services.flatpak.enable = true;     # Flatpak
   services.v2raya.enable = true;      # 代理

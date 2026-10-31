@@ -17,6 +17,8 @@
 
 let
   clavis = pkgs.callPackage ./packages/clavis-shell.nix { };
+  # Clavis 的配套命令行（key shell / sysmon / clipboard …），nixpkgs 没有
+  keyCli = pkgs.callPackage ./packages/key-cli.nix { };
 
   # 上游要求一个**外部** QML 模块 M3Shapes（Material 3 shapes，
   # androidx shape 库的 Qt 移植），上游 flake 已提供打包：
@@ -49,8 +51,53 @@ let
       (map (n: if builtins.hasAttr n pkgs then pkgs.${n} else null) names);
 
 in {
+  # ── systemd 用户服务（与上游一致：由 key 管理生命周期）──
+  # 故意不写 Install.WantedBy：默认仍由 niri 的 spawn-at-startup 拉起自研
+  # clavis-style，Clavis 只在 ~/.config/niri/clavis.sh 切换时手动启停，
+  # 避免两个 shell 同时占 bar/通知。
+  systemd.user.services.clavis-shell = {
+    Unit = {
+      Description = "Clavis Shell";
+      Requisite = [ "niri.service" ];
+      PartOf = [ "niri.service" ];
+      After = [ "niri.service" ];
+      StartLimitIntervalSec = 30;
+      StartLimitBurst = 5;
+    };
+    Service = {
+      Environment = [
+        "MALLOC_CONF=thp:never,narenas:4,dirty_decay_ms:3000"
+        "QML2_IMPORT_PATH=${clavisQmlPath}"
+        "QML_IMPORT_PATH=${clavisQmlPath}"
+        "XDG_CONFIG_DIRS=${clavis}/etc/xdg:/etc/xdg"
+      ];
+      ExecStart = "${keyCli}/bin/key shell --foreground --no-duplicate";
+      Restart = "on-failure";
+      RestartSec = 2;
+      TimeoutStopSec = 10;
+    };
+  };
+
+  systemd.user.services.clavis-clipboard = {
+    Unit = {
+      Description = "Clavis clipboard watcher";
+      Requisite = [ "niri.service" ];
+      PartOf = [ "niri.service" ];
+      After = [ "niri.service" ];
+      StartLimitIntervalSec = 30;
+      StartLimitBurst = 5;
+    };
+    Service = {
+      ExecStart = "${keyCli}/bin/key clipboard watch";
+      Restart = "on-failure";
+      RestartSec = 2;
+      TimeoutStopSec = 5;
+    };
+  };
+
   home.packages = [
     clavis
+    keyCli
     m3shapes
 
     # 图标字体：Clavis 的 UI 全靠 Material Symbols（Rounded/Outlined，
@@ -121,16 +168,17 @@ in {
 
       # 现在跑的是哪个（两个都是 .quickshell-wra，靠 cmdline 区分）
       current() {
+        if systemctl --user is-active --quiet clavis-shell.service; then
+          printf 'clavis'
+          return
+        fi
         local cmd
-        cmd="$(pgrep -af 'quickshell' 2>/dev/null | grep -v pgrep | head -1)"
-        case "$cmd" in
-          *clavis-style*) printf 'ours' ;;
-          "") printf 'none' ;;
-          *) printf 'clavis' ;;
-        esac
+        cmd="$(pgrep -af 'quickshell -c clavis-style' 2>/dev/null | grep -v pgrep | head -1)"
+        if [ -n "$cmd" ]; then printf 'ours'; else printf 'none'; fi
       }
 
       stop_all() {
+        systemctl --user stop clavis-shell.service clavis-clipboard.service 2>/dev/null
         pkill -x .quickshell-wra 2>/dev/null
         sleep 0.4
       }
@@ -142,10 +190,8 @@ in {
 
       start_clavis() {
         stop_all
-        XDG_CONFIG_DIRS="$CONFIG_DIRS" \
-        QML2_IMPORT_PATH="$QML_PATH" \
-        QML_IMPORT_PATH="$QML_PATH" \
-          setsid quickshell -c clavis >"$LOG" 2>&1 &
+        systemctl --user start clavis-shell.service clavis-clipboard.service
+        echo "started clavis (log: journalctl --user -u clavis-shell -f)"
       }
 
       case "''${1:-toggle}" in
