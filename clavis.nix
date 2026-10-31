@@ -121,6 +121,9 @@ in {
 
     # 脚本 / 功能依赖
     pkgs.matugen # 主题色生成
+    pkgs.cliphist # 剪贴板历史（clavis-clipboard.service 依赖它 + wl-paste）
+    pkgs.libqalculate # qalc：Spotlight 计算器
+    pkgs.pulseaudio # pactl：音频源/录制发现
     pkgs.brightnessctl # 内屏亮度
     pkgs.ddcutil # 外接屏亮度
     pkgs.grim # 截图
