@@ -15,13 +15,45 @@
 # 注意：上游 C++ 只依赖 Qt6 + qtkeychain + libcava + pipewire + libudev。
 # maplibre / QtLocation / lottie / qt5compat 只在 QML 运行时用到，是运行时
 # 依赖，不出现在 buildInputs 里。
-{ lib, stdenv, cmake, ninja, pkg-config, python3, patchelf, qt6, qt6Packages, libcava, pipewire, systemd, wayland, wayland-protocols, wayland-scanner, glib, libxkbcommon }:
+{ lib, stdenv, fetchurl, cmake, ninja, pkg-config, python3, patchelf, qt6, qt6Packages, libcava, pipewire, systemd, wayland, wayland-protocols, wayland-scanner, glib, libxkbcommon }:
 
+let
+  # 上游只在 release 时把 meteocons 图标资源塞进源码树（git 里只有 .gitkeep），
+  # 这里按 packaging/dependencies.json 的 resources 自己下载。
+  meteoconsSvg = fetchurl {
+    url = "https://registry.npmjs.org/@meteocons/svg/-/svg-0.1.0.tgz";
+    hash = "sha256-kbSNH4SX2ej07R1bzDLTBqqlBQ3pnDhGfCpY963VpQE=";
+  };
+  meteoconsLottie = fetchurl {
+    url = "https://registry.npmjs.org/@meteocons/lottie/-/lottie-0.1.0.tgz";
+    hash = "sha256-Q+onMqvejkKcT8VqJ7ss79hT+MNKkEtX+GpLWivxoT0=";
+  };
+in
 stdenv.mkDerivation (finalAttrs: {
   pname = "clavis-shell";
   version = "2026.9.12";
 
   src = ../assets/quickshell/clavis;
+
+  # 把 npm 包里的 meteocons 资源放进源码树（上游 release 流程做的事）：
+  #   svg   → assets/icons/weather/meteocons/svg/{fill,flat,line,monochrome}
+  #   lottie→ assets/icons/weather/meteocons/lottie/fill
+  postPatch = ''
+    unpack_meteocons() {
+      archive="$1"; dest="$2"; shift 2
+      tmp=$(mktemp -d)
+      tar -xzf "$archive" -C "$tmp"
+      for style in "$@"; do
+        if [ -d "$tmp/package/$style" ]; then
+          mkdir -p "$dest/$style"
+          cp -r "$tmp/package/$style/." "$dest/$style/"
+        fi
+      done
+      rm -rf "$tmp"
+    }
+    unpack_meteocons ${meteoconsSvg} assets/icons/weather/meteocons/svg fill flat line monochrome
+    unpack_meteocons ${meteoconsLottie} assets/icons/weather/meteocons/lottie fill
+  '';
 
   # 上游 core/CMakeLists.txt 会调 scripts/dev/generate-search-catalog.py
   nativeBuildInputs = [
