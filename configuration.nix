@@ -177,6 +177,14 @@ in {
   # ─── 服务 ──────────────────────────────────────────────────
   services.openssh.enable = true;     # SSH
   services.tailscale.enable = true;   # Tailscale（WireGuard mesh VPN / 远程隧道）
+
+  # ─── 本地 AI（ollama / ComfyUI）────────────────────────────
+  # ollama 监听 127.0.0.1:11434，用 RTX 4060（CUDA）跑模型。
+  # 新版 nixpkgs 没有 acceleration 选项了，直接选 ollama-cuda 包。
+  services.ollama = {
+    enable = true;
+    package = pkgs.ollama-cuda;
+  };
   services.udev.packages = [ pkgs.brightnessctl ];  # 允许普通用户调亮度
   # Clavis 的键盘状态（CapsLock / NumLock）要读整个 evdev 键盘节点；
   # 这条来自上游 key-cli 的 71-clavis-keyboard-leds.rules，TAG+=uaccess
@@ -271,6 +279,8 @@ in {
     v2raya
     # AI 编码工具
     opencode
+    # 本地 AI：ComfyUI（Stable Diffusion 工作流）
+    comfyui
     # 音视频处理
     ffmpeg
     # 文件系统工具
