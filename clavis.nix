@@ -52,9 +52,8 @@ let
 
 in {
   # ── systemd 用户服务（与上游一致：由 key 管理生命周期）──
-  # 故意不写 Install.WantedBy：默认仍由 niri 的 spawn-at-startup 拉起自研
-  # clavis-style，Clavis 只在 ~/.config/niri/clavis.sh 切换时手动启停，
-  # 避免两个 shell 同时占 bar/通知。
+  # 默认随 niri.service 自动启动；niri 配置里已不再 spawn clavis-style。
+  # 想切回自研 bar：~/.config/niri/clavis.sh ours（会先停掉本服务）。
   systemd.user.services.clavis-shell = {
     Unit = {
       Description = "Clavis Shell";
@@ -79,6 +78,7 @@ in {
       RestartSec = 2;
       TimeoutStopSec = 10;
     };
+    Install.WantedBy = [ "niri.service" ];
   };
 
   systemd.user.services.clavis-clipboard = {
@@ -96,6 +96,7 @@ in {
       RestartSec = 2;
       TimeoutStopSec = 5;
     };
+    Install.WantedBy = [ "niri.service" ];
   };
 
   home.packages = [

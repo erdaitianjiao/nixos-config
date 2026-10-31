@@ -126,7 +126,9 @@ environment {
 // 这里不再重复 spawn，否则两个实例会抢 DBus 名。
 // Quickshell(clavis-style) 这条 bar；它自带通知弹窗（接管
 // org.freedesktop.Notifications），所以不需要 waybar / mako。
-spawn-at-startup "quickshell" "-c" "clavis-style"
+// bar / 通知 / 锁屏交给 Clavis（上游 StatIndet/quickshell，见 clavis.nix）。
+// 由 systemd 用户服务 clavis-shell.target 随 niri.service 启动，这里不再
+// spawn clavis-style；想切回自研 bar 用 Mod+Shift+C 或 clavis.sh ours。
 // 让 X11 侧 fcitx5 候选窗跟随当前聚焦输出缩放（动态写 Xft.dpi）
 spawn-sh-at-startup "~/.config/niri/xwayland-dpi.sh"
 // 壁纸（从 ~/entertaiment/picture 随机选一张）
