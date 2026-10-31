@@ -261,6 +261,7 @@ in {
 
     # 终端 / 实用工具
     tmux htop wget git curl unzip unrar
+    btop cloc                     # 系统监控 / 代码统计
     bubblewrap                    # bwrap：沙箱化执行（Reasonix 的 bash 工具依赖它）
     libnotify                     # notify-send（脚本发通知用；之前没装，脚本里都静默失败了）
     gnome-terminal
