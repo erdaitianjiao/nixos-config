@@ -179,7 +179,9 @@ in {
 
       stop_all() {
         systemctl --user stop clavis-shell.service clavis-clipboard.service 2>/dev/null
-        pkill -x .quickshell-wra 2>/dev/null
+        # 进程名就是 quickshell（不是 wrapper 的 .quickshell-wra），
+        # clavis-style 是 niri spawn 起来的，只能按进程名杀。
+        pkill -x quickshell 2>/dev/null
         sleep 0.4
       }
 
