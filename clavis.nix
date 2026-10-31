@@ -70,6 +70,9 @@ in {
         "QML2_IMPORT_PATH=${clavisQmlPath}"
         "QML_IMPORT_PATH=${clavisQmlPath}"
         "XDG_CONFIG_DIRS=${clavis}/etc/xdg:/etc/xdg"
+        # Clavis 的 niri_config.py 用 ctypes 加载 libxkbcommon.so.0，
+        # NixOS 下不在默认搜索路径，缺了会导致快捷键速查 / niri 设置全空。
+        "LD_LIBRARY_PATH=${pkgs.libxkbcommon}/lib"
       ];
       ExecStart = "${keyCli}/bin/key shell --foreground --no-duplicate";
       Restart = "on-failure";

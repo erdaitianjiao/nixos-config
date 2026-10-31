@@ -25,6 +25,7 @@ in {
 
     # ── 辅助脚本 ──
     "niri/keybinds.sh"          = exe "keybinds.sh";
+    "niri/shortcut-map.sh"      = exe "shortcut-map.sh";
     "niri/lock.sh"              = exe "lock.sh";
     "niri/wallpaper.sh"         = exe "wallpaper.sh";
     "niri/bar-watch.sh"         = exe "bar-watch.sh";

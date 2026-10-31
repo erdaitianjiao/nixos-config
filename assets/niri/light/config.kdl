@@ -158,7 +158,9 @@ hotkey-overlay {
 // ── 快捷键 ───────────────────────────────────────────
 binds {
     // 快捷键速查（fuzzel 主题化版，替代自带 overlay）
-    Mod+Shift+Slash { spawn-sh "~/.config/niri/keybinds.sh"; }
+    // 快捷键速查：Clavis 在跑就用它内置的 shortcut-map（读 niri 实际 binds），
+    // 否则回退到 fuzzel 版。见 ~/.config/niri/shortcut-map.sh
+    Mod+Shift+Slash { spawn-sh "~/.config/niri/shortcut-map.sh"; }
 
     // ── 启动应用 ──
     Mod+Return { spawn "kitty"; }
