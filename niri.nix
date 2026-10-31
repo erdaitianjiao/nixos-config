@@ -2,7 +2,7 @@
 # niri 桌面环境 —— home-manager 模块（配置文件声明式管理）
 #
 # 切换主题：把下面的 theme 改成 "light" 或 "dark"，然后 nixos-rebuild switch
-#   light = Matcha 浅绿（白天）
+#   light = Quickshell Blue（白天浅蓝，对齐 Clavis 的 Material 配色）
 #   dark  = Tokyo Night（夜间）
 #
 # bar / 通知都交给 Quickshell（assets/quickshell/clavis-style），
