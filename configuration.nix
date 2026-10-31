@@ -248,6 +248,7 @@ in {
 
     # 终端 / 实用工具
     tmux wget git curl unzip unrar
+    btop cloc                     # 系统监控 / 代码统计
     gnome-terminal
     zsh-powerlevel10k
 
