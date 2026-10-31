@@ -21,7 +21,7 @@ PanelWindow {
 
     implicitHeight: surfaceThickness
     color: "transparent"
-    exclusiveZone: PersonalizationConfig.barOverlay ? 0 : exclusiveThickness
+    exclusiveZone: PersonalizationConfig.barOverlay ? -1 : exclusiveThickness
     // Floating changes desktop reservation, not stacking above fullscreen windows.
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "clavis-shell-bar-horizontal"

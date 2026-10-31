@@ -41,3 +41,6 @@ rsync -a --exclude=.git --delete /tmp/quickshell-inspect/ assets/quickshell/clav
 - `Modules/Keystone/Styles/Shared/KeystoneSurface.qml`：给灵动岛的
   `maskContainer` 加 `anchors.horizontalCenterOffset: -100`。上游默认水平居中，
   在 1706×960 逻辑分辨率下会和右上角的状态图标簇重叠，左移 100px 避开。
+- `Modules/Bar/HorizontalBarWindow.qml` / `VerticalBarWindow.qml`：bar 的
+  `overlay` 模式原来用 `exclusiveZone: 0`，niri 仍按 surface 高度预留（窗口被
+  推下 52px）；改成 `-1` 才真正不占 work area。
