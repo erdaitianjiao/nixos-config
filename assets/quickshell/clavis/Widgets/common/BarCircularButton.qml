@@ -11,8 +11,7 @@ Item {
     // surface in every state; the opened surface already communicates selection.
     property bool selected: false
     property real baseSize: Sizes.barControlCircleSize
-    property real hoverSize: 34
-    property real iconSize: root.pointerHovered ? 20 : 18
+    property real iconSize: 20
     property real iconFill: 0
     property color containerColor: Appearance.colors.colPrimaryContainer
     property color rippleColor: Appearance.colors.colOnPrimaryContainer
@@ -34,75 +33,52 @@ Item {
     Accessible.name: root.tooltipText
     Accessible.role: Accessible.Button
 
-    RippleButton {
+    IconButton {
         id: button
 
         anchors.centerIn: parent
-        width: root.pointerHovered ? root.hoverSize : root.baseSize
+        width: root.baseSize
         height: width
         enabled: root.enabled
         buttonRadius: width / 2
         containerColor: root.containerColor
         rippleColor: root.rippleColor
-        stateLayerEnabled: false
-        downAction: (event) => {
+        iconName: root.iconName
+        iconSize: root.iconSize
+        iconFill: root.iconFill
+        iconColor: root.iconColor
+        selected: root.selected
+        showTooltip: false
+        accessibleName: root.tooltipText
+        downAction: event => {
             if (root.downAction)
                 root.downAction(event);
-
         }
         releaseAction: () => {
             return root.clicked(null);
         }
-        doubleClickAction: (event) => {
+        doubleClickAction: event => {
             if (root.doubleClickAction)
                 root.doubleClickAction(event);
 
             root.doubleClicked(event);
         }
-        altAction: (event) => {
+        altAction: event => {
             if (root.altAction)
                 root.altAction(event);
 
             root.altClicked(event);
         }
-        middleClickAction: (event) => {
+        middleClickAction: event => {
             if (root.middleClickAction)
                 root.middleClickAction(event);
 
             root.middleClicked(event);
         }
-
-        Behavior on width {
-            NumberAnimation {
-                duration: Appearance.animation.expressiveFastEffects.duration
-                easing.type: Appearance.animation.expressiveFastEffects.type
-                easing.bezierCurve: Appearance.animation.expressiveFastEffects.bezierCurve
-            }
-
-        }
-
-        contentItem: MaterialSymbol {
-            text: root.iconName
-            iconSize: root.iconSize
-            fill: root.iconFill
-            color: root.iconColor
-
-            Behavior on iconSize {
-                NumberAnimation {
-                    duration: Appearance.animation.expressiveFastEffects.duration
-                    easing.type: Appearance.animation.expressiveFastEffects.type
-                    easing.bezierCurve: Appearance.animation.expressiveFastEffects.bezierCurve
-                }
-
-            }
-
-        }
-
     }
 
     StyledToolTip {
         text: root.tooltipText
         extraVisibleCondition: root.tooltipText.length > 0 && root.pointerHovered
     }
-
 }

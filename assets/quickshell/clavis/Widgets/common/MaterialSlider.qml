@@ -7,7 +7,7 @@ Item {
 
     property real from: 0
     property real to: 1
-    property real stepSize: 0
+    property real stepSize: 0.01
     property real value: 0
     property bool discrete: false
     property bool live: true
@@ -54,7 +54,7 @@ Item {
         from: root.from
         to: root.to
         stepSize: root.stepSize
-        snapMode: root.discrete ? Slider.SnapAlways : Slider.NoSnap
+        snapMode: Slider.SnapAlways
         enabled: root.enabled
         live: root.live
         hoverEnabled: true
@@ -68,6 +68,20 @@ Item {
         }
 
         property bool gestureStarted: false
+        property bool positionAnimationReady: false
+        property real animatedVisualPosition: visualPosition
+
+        Component.onCompleted: positionAnimationReady = true
+
+        // Animate value changes, not the geometry produced by a layout pass.
+        Behavior on animatedVisualPosition {
+            enabled: control.positionAnimationReady && !control.pressed
+            NumberAnimation {
+                duration: Appearance.animation.expressiveEffects.duration
+                easing.type: Appearance.animation.expressiveEffects.type
+                easing.bezierCurve: Appearance.animation.expressiveEffects.bezierCurve
+            }
+        }
 
         onPressedChanged: {
             if (pressed) {
@@ -91,7 +105,8 @@ Item {
             readonly property real usableWidth: Math.max(1, width - root.trackInset * 2)
             readonly property real trackStartX: root.trackInset
             readonly property real trackEndX: root.trackInset + usableWidth
-            readonly property real handleCenterX: root.trackInset + control.visualPosition * usableWidth
+            readonly property real handleCenterX: root.trackInset + control.animatedVisualPosition
+                                                  * usableWidth
             readonly property real halfGap: root.handleTrackGap / 2
             readonly property real activeEndX: Math.max(trackStartX, handleCenterX - halfGap)
             readonly property real inactiveStartX: Math.min(trackEndX, handleCenterX + halfGap)
@@ -107,15 +122,6 @@ Item {
                 visible: width > 0
                 color: control.enabled ? Appearance.colors.colPrimary : Appearance.applyAlpha(
                                              Appearance.colors.colOnSurface, 0.38)
-
-                Behavior on width {
-                    enabled: !control.pressed
-                    NumberAnimation {
-                        duration: Appearance.animation.expressiveEffects.duration
-                        easing.type: Appearance.animation.expressiveEffects.type
-                        easing.bezierCurve: Appearance.animation.expressiveEffects.bezierCurve
-                    }
-                }
             }
 
             Rectangle {
@@ -129,24 +135,6 @@ Item {
                 visible: width > 0
                 color: control.enabled ? Appearance.colors.colSecondaryContainer : Appearance.applyAlpha(
                                              Appearance.colors.colOnSurface, 0.12)
-
-                Behavior on x {
-                    enabled: !control.pressed
-                    NumberAnimation {
-                        duration: Appearance.animation.expressiveEffects.duration
-                        easing.type: Appearance.animation.expressiveEffects.type
-                        easing.bezierCurve: Appearance.animation.expressiveEffects.bezierCurve
-                    }
-                }
-
-                Behavior on width {
-                    enabled: !control.pressed
-                    NumberAnimation {
-                        duration: Appearance.animation.expressiveEffects.duration
-                        easing.type: Appearance.animation.expressiveEffects.type
-                        easing.bezierCurve: Appearance.animation.expressiveEffects.bezierCurve
-                    }
-                }
             }
 
             Repeater {
@@ -191,22 +179,14 @@ Item {
         handle: Item {
             id: handleRoot
 
-            x: control.leftPadding + root.trackInset + control.visualPosition * Math.max(1, control.availableWidth
-                                                                                         - root.trackInset
-                                                                                         * 2) - width / 2
+            x: control.leftPadding + root.trackInset + control.animatedVisualPosition * Math.max(1, control.availableWidth
+                                                                                                 - root.trackInset
+                                                                                                 * 2) - width
+               / 2
             y: root.trackCenterY - height / 2
             width: root.stateLayerSize
             height: root.handleHeight
             z: 100
-
-            Behavior on x {
-                enabled: !control.pressed
-                NumberAnimation {
-                    duration: Appearance.animation.expressiveEffects.duration
-                    easing.type: Appearance.animation.expressiveEffects.type
-                    easing.bezierCurve: Appearance.animation.expressiveEffects.bezierCurve
-                }
-            }
 
             Item {
                 id: valueIndicator

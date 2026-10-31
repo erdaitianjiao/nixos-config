@@ -7,8 +7,6 @@ BarCircularButton {
 
     property string viewName: "info"
     property string sidebarIconName: "notifications"
-    property color activeColor: Appearance.colors.colSecondaryContainer
-    property color activeContentColor: Appearance.colors.colOnSecondaryContainer
     readonly property bool isActive: WidgetState.dashboardSidebarOpen && WidgetState.dashboardSidebarView
                                      === root.viewName
 
@@ -23,9 +21,9 @@ BarCircularButton {
 
     selected: root.isActive
     iconName: root.sidebarIconName
-    containerColor: root.activeColor
-    rippleColor: root.activeContentColor
-    iconColor: root.activeContentColor
+    containerColor: "transparent"
+    rippleColor: Appearance.colors.colOnSurface
+    iconColor: Appearance.colors.colOnSurface
     tooltipText: root.viewName === "drawer" ? qsTr("Drawer") : qsTr("Notification center")
     onClicked: root.toggleView()
 }

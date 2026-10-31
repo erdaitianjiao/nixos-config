@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent / 'vendor'))
 import kdl
 
 PRINT = kdl.PrintConfig(indent='    ', semicolons=True)
-FRAGMENTS = ('effects', 'cursor', 'layer-rules', 'binds', 'outputs', 'minimize-animation')
+FRAGMENTS = ('effects', 'cursor', 'layer-rules', 'binds', 'outputs', 'minimize-animation', 'hot-corners')
 
 # Stable first-setup defaults. Existing fragments, including empty ones, are preserved.
 DEFAULT_BINDINGS = (
@@ -241,6 +241,8 @@ def replace_file(path, text):
 
 def initial(feature, request):
     header = '// Managed by Clavis.\n'
+    if feature == 'hot-corners':
+        return edit_hot_corners(header)
     if feature == 'minimize-animation':
         return edit_minimize_animation(header, request) if 'effect' in request else header
     if feature == 'outputs':
@@ -416,6 +418,58 @@ def edit_minimize_animation(previous, request):
     return previous + '\n' + render(kdl.Node('animations', nodes=[replacement]))
 
 
+def hot_corners_state(graph):
+    # Gestures merge positionally, but hot-corners is replaced as a whole.
+    # Output blocks instead use the first matching identifier, and an explicit
+    # output hot-corners block replaces the global setting even when it is empty.
+    global_disabled = False
+    global_source = ''
+    output_conflicts = []
+    seen_outputs = set()
+    for path, node in graph.ordered:
+        if node.name == 'gestures':
+            for child in node.nodes:
+                if child.name == 'hot-corners':
+                    global_disabled = any(option.name == 'off' for option in child.nodes)
+                    global_source = str(path)
+        elif node.name == 'output' and node.args and isinstance(node.args[0], str):
+            identifier = node.args[0]
+            if identifier.lower() in seen_outputs:
+                continue
+            seen_outputs.add(identifier.lower())
+            for child in node.nodes:
+                if child.name == 'hot-corners' and not any(option.name == 'off' for option in child.nodes):
+                    output_conflicts.append(dict(identifier=identifier, source=str(path)))
+                    break
+    return dict(disabled=global_disabled and not output_conflicts,
+                globalDisabled=global_disabled, globalSource=global_source,
+                outputConflicts=output_conflicts)
+
+
+def hot_corners_conflict_message(state):
+    if state['outputConflicts']:
+        outputs = ', '.join(row['identifier'] + ' (' + row['source'] + ')'
+                            for row in state['outputConflicts'])
+        return 'Disable native hot corners in these output blocks before setting up Clavis: ' + outputs
+    return ('Another configuration enables native hot corners; move the Clavis hot-corners include after it: '
+            + state['globalSource'])
+
+
+def edit_hot_corners(previous):
+    replacement = kdl.Node('hot-corners', nodes=[kdl.Node('off')])
+    sections = [node for node in parse(previous).nodes if node.name == 'gestures']
+    nodes = [child for node in sections for child in node.nodes if child.name == 'hot-corners']
+    if nodes:
+        node = nodes[-1]
+        if any(option.name == 'off' for option in node.nodes):
+            return previous
+        return previous[:node.source_start] + render(replacement).strip() + previous[node.source_end:]
+    if sections and hasattr(sections[-1], 'children_end'):
+        end = sections[-1].children_end
+        return previous[:end] + '\n' + render(replacement) + previous[end:]
+    return previous + '\n' + render(kdl.Node('gestures', nodes=[replacement]))
+
+
 def status(request):
     main = main_path(request)
     managed_dir = main.parent / 'clavis'
@@ -428,6 +482,7 @@ def status(request):
             raise graph.error
         state['revision'] = graph.revision()
         state['minimizeAnimation'] = minimize_animation_state(graph)
+        state['hotCorners'] = hot_corners_state(graph)
         state['outputs'] = niri_outputs.inspect(graph, path_key(managed_dir / 'outputs.kdl'))
         state['bindings'], state['modKey'] = bindings(graph, path_key(managed_dir / 'binds.kdl'))
         state['diagnostics']['conflicts'] = any(row['collision'] for row in state['bindings'])
@@ -466,12 +521,18 @@ def status(request):
                     for child in node.nodes:
                         if child.name == 'place-within-backdrop':
                             backdrop = child.args == [True]
-        if not graph.missing:
+        hot_corners_fragment = state['fragments']['hot-corners']
+        if not graph.missing or hot_corners_fragment['state'] == 'ready':
             try:
                 graph.validate(request.get('niri', 'niri'))
             except ValueError as error:
                 state['diagnostics']['invalid'] = True
                 state['diagnostics']['details'] = str(error)
+        if hot_corners_fragment['state'] == 'ready':
+            if state['diagnostics']['invalid']:
+                hot_corners_fragment.update(state='error', details=state['diagnostics']['details'])
+            elif not state['hotCorners']['disabled']:
+                hot_corners_fragment.update(state='conflict', details=hot_corners_conflict_message(state['hotCorners']))
         state['overviewSatisfied'] = transparent and backdrop
         state['overviewBackdrop'] = backdrop
         state['overviewTransparent'] = transparent
@@ -599,7 +660,9 @@ def mutate(request):
         previous = read_text(path) if exists else None
         if exists:
             parse(previous)
-        if request['operation'] == 'setup':
+        if feature == 'hot-corners':
+            candidate = edit_hot_corners(previous) if exists else initial(feature, request)
+        elif request['operation'] == 'setup':
             candidate = previous if exists else initial(feature, request)
         elif feature == 'outputs':
             candidate = niri_outputs.edit(graph, path_key(path), request, sys.modules[__name__])
@@ -615,6 +678,10 @@ def mutate(request):
             main_candidate += '\n' + render(kdl.Node('include', args=['clavis/' + feature + '.kdl']))
         replacements = {path_key(main): main_candidate, path_key(path): candidate}
         candidate_graph = Graph(main, replacements=replacements)
+        if feature == 'hot-corners':
+            hot_corners = hot_corners_state(candidate_graph)
+            if not hot_corners['disabled']:
+                raise ValueError(hot_corners_conflict_message(hot_corners))
         if feature == 'minimize-animation' and request['operation'] != 'setup':
             if minimize_animation_state(candidate_graph)['effect'] != request.get('effect'):
                 raise ValueError('Another configuration overrides the animation effect; move the Clavis animation include after it')

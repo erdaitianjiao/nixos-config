@@ -18,6 +18,8 @@ layout(std140, binding = 0) uniform buf {
     float edgeSoftness;
     vec4 cutoutRect;
     float cutoutRadius;
+    float attached;
+    vec2 inwardDirection;
 } ubuf;
 
 float roundedBoxDistance(vec2 point, vec2 halfSize, float radius)
@@ -37,14 +39,29 @@ float smoothMinimum(float first, float second, float radius)
     return min(first, second) - influence * influence * radius * 0.25;
 }
 
+float mainBarDistance(vec2 point)
+{
+    if (ubuf.attached < 0.5)
+        return roundedBoxDistance(point, ubuf.mainSize * 0.5, ubuf.mainRadius);
+
+    // Canonical coordinates: x follows the screen edge, y points inward.
+    vec2 tangent = vec2(ubuf.inwardDirection.y, -ubuf.inwardDirection.x);
+    vec2 p = vec2(dot(point, tangent), dot(point, ubuf.inwardDirection));
+    vec2 halfSize = vec2(dot(ubuf.mainSize, abs(tangent)),
+                        dot(ubuf.mainSize, abs(ubuf.inwardDirection))) * 0.5;
+    float body = roundedBoxDistance(p, halfSize, p.y > 0.0 ? ubuf.mainRadius : 0.0);
+    // Flat at the screen, concave shoulders outside the body, round inward corners.
+    vec2 shoulder = vec2(abs(p.x) - halfSize.x, p.y + halfSize.y);
+    vec2 extent = vec2(8.0, 14.0);
+    float bounds = roundedBoxDistance(shoulder - extent * 0.5, extent * 0.5, 0.0);
+    float ellipse = (length((shoulder - extent) / extent) - 1.0) * 8.0;
+    return min(body, max(bounds, -ellipse));
+}
+
 void main()
 {
     vec2 pixel = qt_TexCoord0 * ubuf.resolution;
-    float mainDistance = roundedBoxDistance(
-        pixel - ubuf.mainCenter,
-        ubuf.mainSize * 0.5,
-        ubuf.mainRadius
-    );
+    float mainDistance = mainBarDistance(pixel - ubuf.mainCenter);
     float satelliteDistance = roundedBoxDistance(
         pixel - ubuf.satelliteCenter,
         ubuf.satelliteSize * 0.5,

@@ -19,7 +19,6 @@ StyledFlickable {
 
         required property string roleId
         required property string title
-        required property string iconName
 
         readonly property var roleState: DefaultApplicationsService.stateFor(settingRow.roleId)
         readonly property var selectedOption: {
@@ -35,18 +34,6 @@ StyledFlickable {
 
             anchors.fill: parent
             spacing: Metrics.spacingS
-
-            MaterialSymbol {
-                Layout.alignment: Qt.AlignVCenter
-                Layout.preferredWidth: Metrics.iconM
-                Layout.preferredHeight: Metrics.iconM
-                text: settingRow.iconName
-                iconSize: Metrics.iconM
-                color: Appearance.colors.colOnSurfaceVariant
-
-                // Keep the row icon as a glyph; only group headers use a
-                // tonal icon container.
-            }
 
             ColumnLayout {
                 Layout.fillWidth: true
@@ -97,7 +84,6 @@ StyledFlickable {
 
         Text {
             anchors.left: rowColumn.left
-            anchors.leftMargin: Metrics.controlHeightM + Metrics.spacingS
             anchors.right: rowColumn.right
             anchors.top: rowColumn.bottom
             visible: !DefaultApplicationsService.loading && (settingRow.roleState.candidates || []).length
@@ -153,13 +139,11 @@ StyledFlickable {
             DefaultAppSettingRow {
                 roleId: "browser"
                 title: qsTr("Web browser")
-                iconName: "language"
             }
 
             DefaultAppSettingRow {
                 roleId: "mail"
                 title: qsTr("Email")
-                iconName: "mail"
             }
         }
 
@@ -178,13 +162,11 @@ StyledFlickable {
             DefaultAppSettingRow {
                 roleId: "file-manager"
                 title: qsTr("File manager")
-                iconName: "folder"
             }
 
             DefaultAppSettingRow {
                 roleId: "terminal"
                 title: qsTr("Terminal")
-                iconName: "terminal"
             }
         }
 
@@ -203,13 +185,11 @@ StyledFlickable {
             DefaultAppSettingRow {
                 roleId: "text-editor"
                 title: qsTr("Text editor")
-                iconName: "edit_note"
             }
 
             DefaultAppSettingRow {
                 roleId: "pdf-reader"
                 title: qsTr("PDF reader")
-                iconName: "picture_as_pdf"
             }
         }
 
@@ -228,19 +208,16 @@ StyledFlickable {
             DefaultAppSettingRow {
                 roleId: "image-viewer"
                 title: qsTr("Image viewer")
-                iconName: "image"
             }
 
             DefaultAppSettingRow {
                 roleId: "video-player"
                 title: qsTr("Video player")
-                iconName: "smart_display"
             }
 
             DefaultAppSettingRow {
                 roleId: "music-player"
                 title: qsTr("Music player")
-                iconName: "music_note"
             }
         }
 

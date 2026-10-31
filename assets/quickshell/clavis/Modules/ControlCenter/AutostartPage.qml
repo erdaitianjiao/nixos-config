@@ -145,7 +145,6 @@ StyledFlickable {
 
                 SettingsRow {
                     Layout.fillWidth: true
-                    iconName: "apps"
                     title: qsTr("Browse applications")
                     supportingText: qsTr("Select an installed app to add to user-level startup")
 

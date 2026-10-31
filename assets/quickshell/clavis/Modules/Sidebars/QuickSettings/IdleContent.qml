@@ -1,6 +1,4 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Controls.Material
 import QtQuick.Layouts
 import qs.Common
 import qs.Components
@@ -10,24 +8,22 @@ import qs.Widgets.common
 WidgetPanel {
     id: panelRoot
 
+    property bool foreground: false
+    property real pendingDimFraction: IdleService.dimFraction
+    readonly property var timeoutPresetSeconds: [60, 120, 300, 600, 900, 1800, 3600, 7200]
+
     title: qsTr("Idle management")
     icon: "schedule"
     showBackButton: true
     backAction: () => WidgetState.quickSettingsView = "settings"
 
-    property bool foreground: false
-    property bool isActive: foreground && WidgetState.quickSettingsView === "idle"
-    property string expandedStage: ""
-    property real pendingDimFraction: IdleService.dimFraction
-    readonly property var timeoutPresetSeconds: [60, 120, 300, 600, 900, 1800, 3600, 7200]
-
     function formatTimeout(seconds) {
         const value = Math.max(0, Number(seconds || 0));
         if (value < 60)
-            return Math.round(value) + qsTr(" seconds");
+            return qsTr("%n second(s)", "", Math.round(value));
         const minutes = value / 60;
-        return (Math.abs(minutes - Math.round(minutes)) < 0.001 ? Math.round(minutes) : minutes.toFixed(1)) + qsTr(
-                    " minutes");
+        return Math.abs(minutes - Math.round(minutes)) < 0.001 ? qsTr("%n minute(s)", "", Math.round(minutes)) :
+                                                                 qsTr("%1 minutes").arg(minutes.toFixed(1));
     }
 
     function timeoutOptions(currentSeconds) {
@@ -42,23 +38,6 @@ WidgetPanel {
         }));
     }
 
-        function stageActive(name) {
-        const stage = IdleService.stages.find(candidate => candidate.name === name);
-        return stage ? !!stage.active : false;
-    }
-
-        function policySummary() {
-        if (!IdleService.policyEnabled)
-        return qsTr("Paused");
-        const enabledCount = IdleService.stages.filter(stage => stage.enabled).length;
-        return enabledCount + qsTr(" enabled");
-    }
-
-        onIsActiveChanged: {
-        if (!isActive)
-        expandedStage = "";
-    }
-
         Timer {
         id: dimFractionCommitTimer
         interval: 250
@@ -66,56 +45,39 @@ WidgetPanel {
         onTriggered: IdleService.setDimFraction(panelRoot.pendingDimFraction)
     }
 
-        ColumnLayout {
+        SidebarFlickable {
+        id: sidebarScroll
         Layout.fillWidth: true
         Layout.fillHeight: true
-        spacing: Appearance.spacing.small
+        contentWidth: width
+        contentHeight: content.implicitHeight + sidebarScroll.contentTopInset
 
-        ProgressBar {
-        Layout.fillWidth: true
-        Layout.preferredHeight: (!IdleService.policyReady || IdleService.busy) ? 4 : 0
-        opacity: (!IdleService.policyReady || IdleService.busy) ? 1 : 0
-        indeterminate: true
-        Material.accent: Appearance.colors.colPrimary
-
-        Behavior on Layout.preferredHeight {
-        ElementMoveAnimation {}
-    }
-        Behavior on opacity {
-        ElementMoveAnimation {}
-    }
-    }
+        ColumnLayout {
+        id: content
+        y: sidebarScroll.contentTopInset
+        width: parent.width
+        spacing: Metrics.spacingL
 
         InlineStatusBanner {
+        Layout.topMargin: sidebarScroll.gapFor(0, 1)
+
         Layout.fillWidth: true
         visible: IdleService.lastError.length > 0
         tone: "error"
         message: IdleService.lastError
     }
 
-        StyledFlickable {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        contentWidth: width
-        contentHeight: idleContent.implicitHeight
-
-        ColumnLayout {
-        id: idleContent
-
-        width: parent.width - Appearance.spacing.small
-        spacing: Appearance.spacing.small
-
         SettingsSection {
+        pullExpansion: sidebarScroll.detailExpansion
+        Layout.topMargin: sidebarScroll.gapFor(1, 1)
+
         Layout.fillWidth: true
 
         SettingsRow {
         Layout.fillWidth: true
         iconName: "coffee"
         title: qsTr("Keep awake")
-        highlighted: IdleService.inhibited
-
         trailing: StyledSwitch {
-        scale: 0.78
         checked: IdleService.inhibited
         enabled: !IdleService.busy
         Accessible.name: qsTr("Keep awake")
@@ -127,11 +89,7 @@ WidgetPanel {
         Layout.fillWidth: true
         iconName: "schedule"
         title: qsTr("Automatic idle")
-        supportingText: panelRoot.policySummary()
-        highlighted: IdleService.policyEnabled
-
         trailing: StyledSwitch {
-        scale: 0.78
         checked: IdleService.policyEnabled
         enabled: IdleService.policyReady
         Accessible.name: qsTr("Automatic idle")
@@ -140,94 +98,63 @@ WidgetPanel {
     }
     }
 
-        SettingsSection {
-        Layout.fillWidth: true
-        title: qsTr("Idle actions")
-
         StageEditor {
+        Layout.topMargin: sidebarScroll.gapFor(2, 1)
+
         Layout.fillWidth: true
         stageName: "dim"
         stageTitle: qsTr("Dim screen")
         stageIcon: "brightness_4"
         showDimFraction: true
     }
-
         StageEditor {
+        Layout.topMargin: sidebarScroll.gapFor(3, 1)
+
         Layout.fillWidth: true
         stageName: "lock"
         stageTitle: qsTr("Lock session")
         stageIcon: "lock"
     }
-
         StageEditor {
+        Layout.topMargin: sidebarScroll.gapFor(4, 1)
+
         Layout.fillWidth: true
         stageName: "displayOff"
         stageTitle: qsTr("Turn off displays")
         stageIcon: "display_settings"
     }
-
         StageEditor {
+        Layout.topMargin: sidebarScroll.gapFor(5, 1)
+
         Layout.fillWidth: true
         stageName: "suspend"
         stageTitle: qsTr("Suspend system")
         stageIcon: "mode_standby"
     }
     }
-
-        Item {
-        Layout.fillWidth: true
-        Layout.preferredHeight: Appearance.spacing.small
-    }
-    }
-    }
     }
 
-        component StageEditor: Item {
+        component StageEditor: SettingsSection {
         id: stageEditor
+        pullExpansion: sidebarScroll.detailExpansion
 
         required property string stageName
         required property string stageTitle
         required property string stageIcon
         property bool showDimFraction: false
-        readonly property bool expanded: panelRoot.expandedStage === stageName
         readonly property bool stageEnabled: !!IdleService[stageName + "Enabled"]
         readonly property real stageTimeout: Number(IdleService[stageName + "Timeout"] || 0)
         readonly property bool respectInhibitors: !!IdleService[stageName + "RespectInhibitors"]
-
-        implicitHeight: stageLayout.implicitHeight
-
-        ColumnLayout {
-        id: stageLayout
-
-        width: parent.width
-        spacing: Appearance.spacing.xSmall
+        readonly property bool stageActive: IdleService.stages.some(stage => stage.name === stageName
+        && stage.active)
+        contentSpacing: Metrics.spacingS
 
         SettingsRow {
         Layout.fillWidth: true
         iconName: stageEditor.stageIcon
         title: stageEditor.stageTitle
-        supportingText: (stageEditor.stageEnabled ? panelRoot.formatTimeout(stageEditor.stageTimeout) : qsTr(
-        "Off")) + (panelRoot.stageActive(stageEditor.stageName) ? qsTr(" · Triggered") : "")
-        interactive: true
-        highlighted: stageEditor.stageEnabled && IdleService.policyEnabled
-        onClicked: panelRoot.expandedStage = stageEditor.expanded ? "" : stageEditor.stageName
-
-        trailing: RowLayout {
-        spacing: Appearance.spacing.xSmall
-
-        MaterialSymbol {
-        text: "expand_more"
-        iconSize: 20
-        color: Appearance.colors.colOnLayer1
-        rotation: stageEditor.expanded ? 180 : 0
-
-        Behavior on rotation {
-        ElementMoveAnimation {}
-    }
-    }
-
-        StyledSwitch {
-        scale: 0.72
+        supportingText: stageEditor.stageActive ? qsTr("Triggered") : ""
+        trailing: StyledSwitch {
         checked: stageEditor.stageEnabled
         enabled: IdleService.policyReady
         Accessible.name: stageEditor.stageTitle
@@ -235,112 +162,43 @@ WidgetPanel {
         stageEditor.respectInhibitors)
     }
     }
-    }
 
-        Rectangle {
+        SettingsRow {
         Layout.fillWidth: true
-        Layout.preferredHeight: stageEditor.expanded ? stageDetails.implicitHeight
-        + Appearance.spacing.medium * 2 : 0
-        opacity: stageEditor.expanded ? 1 : 0
-        enabled: stageEditor.expanded
-        clip: true
-        radius: Appearance.rounding.normal
-        color: Appearance.colors.colLayer2
-
-        Behavior on Layout.preferredHeight {
-        ElementMoveAnimation {}
-    }
-        Behavior on opacity {
-        ElementMoveAnimation {}
-    }
-
-        ColumnLayout {
-        id: stageDetails
-
-        anchors {
-        left: parent.left
-        right: parent.right
-        top: parent.top
-        margins: Appearance.spacing.medium
-    }
-        spacing: Appearance.spacing.small
-
-        RowLayout {
-        Layout.fillWidth: true
-        spacing: Appearance.spacing.small
-
-        Text {
-        Layout.fillWidth: true
-        text: qsTr("Wait time")
-        color: Appearance.colors.colOnLayer2
-        font.family: Fonts.ui
-        font.pixelSize: 13
-    }
-
-        SearchSelectMenuField {
-        Layout.preferredWidth: 144
-        Layout.preferredHeight: 40
+        title: qsTr("Wait time")
+        trailing: SearchSelectMenuField {
+        Layout.preferredWidth: 180
         options: panelRoot.timeoutOptions(stageEditor.stageTimeout)
         value: String(stageEditor.stageTimeout)
         textRole: "label"
         valueRole: "seconds"
-        maxVisibleItems: 5
+        maxVisibleItems: 8
         popupBoundsItem: panelRoot
         closeOnAccept: true
+        enabled: IdleService.policyReady
         Accessible.name: qsTr("%1 wait time").arg(stageEditor.stageTitle)
         onAccepted: value => IdleService.configureStage(stageEditor.stageName, stageEditor.stageEnabled,
         Number(value), stageEditor.respectInhibitors)
     }
     }
 
-        RowLayout {
+        ColumnLayout {
         Layout.fillWidth: true
         visible: stageEditor.showDimFraction
-        spacing: Appearance.spacing.small
+        spacing: Metrics.spacingS
 
         Text {
         text: qsTr("Dim percentage")
         color: Appearance.colors.colOnLayer2
-        font.family: Fonts.ui
-        font.pixelSize: 13
+        font.family: Typography.bodyMedium.family
+        font.pixelSize: Typography.bodyMedium.pixelSize
     }
-
-        Loader {
-        id: dimFractionSliderLoader
-
-        Layout.fillWidth: true
-        Layout.minimumWidth: 148
-        active: stageEditor.showDimFraction
-        sourceComponent: dimFractionSliderComponent
-    }
-    }
-
-        SettingsRow {
-        Layout.fillWidth: true
-        iconName: "coffee"
-        title: qsTr("Skip while keeping awake")
-
-        trailing: StyledSwitch {
-        scale: 0.68
-        checked: stageEditor.respectInhibitors
-        enabled: IdleService.policyReady
-        Accessible.name: qsTr("%1: respect keep-awake").arg(stageEditor.stageTitle)
-        onToggled: IdleService.configureStage(stageEditor.stageName, stageEditor.stageEnabled,
-        stageEditor.stageTimeout, checked)
-    }
-    }
-    }
-    }
-    }
-
-        Component {
-        id: dimFractionSliderComponent
 
         MaterialSplitSlider {
         id: dimFractionSlider
-
-        width: parent ? parent.width : implicitWidth
-        configuration: MaterialSplitSlider.Configuration.XS
+        Layout.fillWidth: true
+        enabled: IdleService.policyReady
+        configuration: MaterialSplitSlider.Configuration.M
         from: 0.1
         to: 0.8
         stepSize: 0.05
@@ -349,18 +207,29 @@ WidgetPanel {
         usePercentTooltip: false
         tooltipContent: Math.round(value * 100) + "%"
         Accessible.name: qsTr("Screen dim percentage")
-
         Binding {
         target: dimFractionSlider
         property: "value"
         value: IdleService.dimFraction
         when: !dimFractionSlider.pressed
     }
-
         onMoved: {
         panelRoot.pendingDimFraction = value;
         dimFractionCommitTimer.restart();
     }
+    }
+    }
+
+        SettingsRow {
+        Layout.fillWidth: true
+        iconName: "coffee"
+        title: qsTr("Skip while keeping awake")
+        trailing: StyledSwitch {
+        checked: stageEditor.respectInhibitors
+        enabled: IdleService.policyReady
+        Accessible.name: qsTr("%1: respect keep-awake").arg(stageEditor.stageTitle)
+        onToggled: IdleService.configureStage(stageEditor.stageName, stageEditor.stageEnabled,
+        stageEditor.stageTimeout, checked)
     }
     }
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "niri_icon_lookup.h"
+#include "niri_floating_parallax.h"
 #include "niri_ipc_client.h"
 #include "niri_output_model.h"
 #include "niri_window_model.h"
@@ -87,6 +88,7 @@ class NiriPlugin : public QObject {
     Q_INVOKABLE bool powerOnMonitors();
     Q_INVOKABLE bool cycleKeyboardLayout();
     Q_INVOKABLE bool doScreenTransition(int delayMs = 0);
+    Q_INVOKABLE void setFloatingParallaxOffsets(const QVariantMap &offsets);
 
   signals:
     void connectedChanged();
@@ -124,6 +126,8 @@ class NiriPlugin : public QObject {
     QVariantMap makeWorkspaceIcon(const NiriWindow &window, int count, bool active) const;
 
     NiriIpcClient m_client;
+    NiriFloatingParallax *m_floatingParallax;
+    quint64 m_floatingParallaxLease;
     NiriWorkspaceModel m_workspaceModel;
     NiriWindowModel m_windowModel;
     NiriOutputModel m_outputModel;

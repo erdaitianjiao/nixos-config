@@ -194,7 +194,8 @@ bool NiriIpcClient::ensureRequestSocket()
     return true;
 }
 
-void NiriIpcClient::requestAsync(const QJsonValue &request, QObject *context, Reply reply, int timeoutMs)
+void NiriIpcClient::requestAsync(const QJsonValue &request, QObject *context, Reply reply, int timeoutMs,
+                                 const QString &socketPath)
 {
     auto *socket = new QLocalSocket(this);
     auto *timer = new QTimer(socket);
@@ -244,5 +245,5 @@ void NiriIpcClient::requestAsync(const QJsonValue &request, QObject *context, Re
         finish(value, {});
     });
     timer->start(qBound(100, timeoutMs, 30000));
-    socket->connectToServer(qEnvironmentVariable("NIRI_SOCKET"));
+    socket->connectToServer(socketPath.isEmpty() ? qEnvironmentVariable("NIRI_SOCKET") : socketPath);
 }

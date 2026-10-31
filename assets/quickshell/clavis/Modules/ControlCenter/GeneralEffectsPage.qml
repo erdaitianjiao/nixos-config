@@ -56,7 +56,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "blur_on"
                 title: qsTr("Background blur")
 
                 trailing: StyledSwitch {
@@ -69,7 +68,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "filter_center_focus"
                 title: qsTr("Blur wallpaper only")
                 supportingText: BlurService.niriIntegrationReady ? qsTr(
                                                                        "Turning this off also blurs windows and uses more resources") :

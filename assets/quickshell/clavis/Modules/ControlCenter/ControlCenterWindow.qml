@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 import Quickshell
 import Quickshell.Wayland
+import Clavis.Niri
 import qs.Common
 import qs.Services
 import qs.Components
@@ -28,6 +29,16 @@ FloatingWindow {
     property int searchRequestSerial: -1
     property var searchLeaf: null
     readonly property var searchPageAnchor: pageSearchAnchor
+    function toggleMaximize() {
+        root.maximized = !root.maximized;
+    }
+
+    function minimizeWindow() {
+        const window = Niri.searchWindows(root.title).find(entry => entry.title === root.title);
+        if (window && Niri.supportsMinimize && Niri.minimizeWindow(window.id))
+            return;
+        root.minimized = true;
+    }
 
     function prepareSearchTarget(entry, serial) {
         searchRequestSerial = serial;
@@ -64,10 +75,12 @@ FloatingWindow {
     function showWindow() {
         root._wasShown = true;
         root.visible = true;
+        root.minimized = false;
     }
 
     function hideWindow() {
         if (root.visible) {
+            settingsSearch.close();
             root.closeChildWindows();
             root.visible = false;
         }
@@ -144,7 +157,7 @@ FloatingWindow {
     implicitWidth: 1100
     implicitHeight: 750
     minimumSize: Qt.size(760, 520)
-    color: "transparent"
+    color: Appearance.m3colors.m3background
     Material.theme: PersonalizationConfig.themeMode === "light" ? Material.Light : Material.Dark
     Material.accent: Appearance.colors.colPrimary
     onVisibleChanged: {
@@ -169,25 +182,21 @@ FloatingWindow {
         interval: 1400
     }
 
-    Rectangle {
-        id: outerBackground
-
-        anchors.fill: parent
-        radius: Appearance.rounding.large
-        color: BlurService.backgroundColor(Appearance.m3colors.m3background)
-        border.width: 1
-        border.color: Appearance.colors.colOutlineVariant
-    }
-
-    CompositorBlurRegion {
-        targetWindow: root
-        backgroundItem: outerBackground
-        radius: outerBackground.radius
-    }
-
     Item {
         id: focusBoundary
         anchors.fill: parent
+
+        Shortcut {
+            sequence: "Ctrl+F"
+            enabled: root.visible && focusBoundary.Window.active
+            onActivated: settingsSearch.open()
+        }
+
+        Shortcut {
+            sequence: "Escape"
+            enabled: root.visible && settingsSearch.expanded
+            onActivated: settingsSearch.close()
+        }
 
         function releaseInputFocus(position) {
             const input = focusBoundary.Window.activeFocusItem;
@@ -223,54 +232,24 @@ FloatingWindow {
                 id: titlebar
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: Math.max(titleText.implicitHeight, closeButton.implicitHeight)
+                Layout.preferredHeight: 40
 
-                Text {
-                    id: titleText
+                SettingsWindowControls {
+                    id: windowControls
 
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: qsTr("Settings")
-                    color: Appearance.colors.colOnLayer0
-                    font.family: Fonts.ui
-                    font.pixelSize: 24
-                    font.weight: Font.DemiBold
+                    x: PersonalizationConfig.settingsWindowControlsSide === "right" ? parent.width - width : 0
+                    anchors.top: parent.top
+                    maximized: root.maximized
+                    onCloseRequested: root.hideWindow()
+                    onMinimizeRequested: root.minimizeWindow()
+                    onMaximizeRequested: root.toggleMaximize()
                 }
 
-                Rectangle {
-                    id: closeButton
-
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    implicitWidth: 35
-                    implicitHeight: 35
-                    radius: Appearance.rounding.full
-                    color: closeMouse.pressed ? Appearance.colors.colLayer1Active : closeMouse.containsMouse
-                                                ? Appearance.colors.colLayer1Hover : "transparent"
-
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        text: "close"
-                        iconSize: 20
-                        color: Appearance.colors.colOnLayer1
-                    }
-
-                    MouseArea {
-                        id: closeMouse
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.hideWindow()
-                    }
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: Appearance.animation.expressiveEffects.duration
-                            easing.type: Appearance.animation.expressiveEffects.type
-                            easing.bezierCurve: Appearance.animation.expressiveEffects.bezierCurve
-                        }
-                    }
+                Item {
+                    id: searchBarSlot
+                    anchors.centerIn: parent
+                    width: Math.min(360, parent.width - windowControls.width * 2 - Metrics.spacingL * 2)
+                    height: 36
                 }
 
                 DragHandler {
@@ -280,6 +259,11 @@ FloatingWindow {
                         if (active)
                             root.startSystemMove();
                     }
+                }
+
+                TapHandler {
+                    acceptedButtons: Qt.LeftButton
+                    onDoubleTapped: root.toggleMaximize()
                 }
             }
 
@@ -413,6 +397,15 @@ FloatingWindow {
                     }
                 }
             }
+        }
+
+        SettingsSearch {
+            id: settingsSearch
+            anchors.fill: parent
+            z: 500
+            barSlot: searchBarSlot
+            sideMargin: root.contentPadding + windowControls.width + Metrics.spacingXL
+            onCollapsed: focusBoundary.forceActiveFocus(Qt.OtherFocusReason)
         }
     }
 }

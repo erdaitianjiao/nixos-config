@@ -7,6 +7,8 @@ set_target_properties(ClavisRuntime PROPERTIES
 qt_add_qml_module(ClavisRuntime
     URI Clavis.Runtime
     SOURCES
+        src/process_quit.h
+        src/process_quit.cpp
         src/horizontal_wheel_area.h
         src/horizontal_wheel_area.cpp
         src/backlight_state.h

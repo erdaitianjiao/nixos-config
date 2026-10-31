@@ -32,6 +32,7 @@ struct NiriWindow {
     bool isUrgent = false;
     int layoutColumn = 999999;
     int layoutRow = 999999;
+    bool hasLayoutPosition = false;
     QString iconPath;
 };
 

@@ -38,7 +38,6 @@ StyledFlickable {
         SettingsRow {
             Layout.fillWidth: true
             title: qsTr("Show Dock")
-            iconName: "dock_to_bottom"
 
             trailing: StyledSwitch {
                 checked: DockService.enabled
@@ -120,7 +119,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Magnify on hover")
-                iconName: "zoom_in"
 
                 trailing: StyledSwitch {
                     checked: DockService.magnification
@@ -162,7 +160,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Automatically hide")
-                iconName: "visibility_off"
 
                 trailing: StyledSwitch {
                     checked: DockService.autoHide
@@ -174,7 +171,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Bounce when launching")
-                iconName: "animation"
 
                 trailing: StyledSwitch {
                     checked: DockService.launchBounce
@@ -186,7 +182,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Show running indicators")
-                iconName: "fiber_manual_record"
 
                 trailing: StyledSwitch {
                     checked: DockService.showIndicators
@@ -199,7 +194,6 @@ StyledFlickable {
                 Layout.fillWidth: true
                 visible: !DockService.supportsMinimizeEffects || NiriConfigService.ready("minimize-animation")
                 title: qsTr("Minimize animation")
-                iconName: "animation"
                 supportingText: !DockService.supportsMinimizeEffects ? qsTr(
                                                                            "Window animation selection is unavailable in this session") :
                                                                        NiriConfigService.minimizeAnimationsDisabled
@@ -247,7 +241,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Show recent applications")
-                iconName: "history"
 
                 trailing: StyledSwitch {
                     checked: DockService.showRecent
@@ -259,7 +252,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Pin applications from the menu")
-                iconName: "keep"
 
                 trailing: StyledSwitch {
                     checked: DockService.contextPinning
@@ -286,7 +278,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Show window thumbnails")
-                iconName: "preview"
                 trailing: StyledSwitch {
                     checked: DockService.showThumbnails
                     Accessible.name: qsTr("Show window thumbnails")

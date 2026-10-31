@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # globally enable MOC to parse Q_OBJECT macros
 set(CMAKE_AUTOMOC ON)
 
+# Keep both development and installed native modules independent of the checkout.
+set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+
 set(CLAVIS_RELEASE "${PROJECT_VERSION}")
 set(CLAVIS_COMMIT "unknown" CACHE STRING "Git commit embedded in the release")
 set(CLAVIS_SOURCE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
@@ -86,13 +90,18 @@ add_subdirectory(plugin/files)
 add_subdirectory(plugin/gamma)
 add_subdirectory(plugin/windowpreview)
 
+foreach(module IN ITEMS DesktopCards Weather WeatherMap Niri Cava Media Keyboard
+        Lyrics I18n Runtime Files Gamma WindowPreview)
+    install(TARGETS Clavis${module} Clavis${module}plugin
+        LIBRARY DESTINATION "${CLAVIS_QML_INSTALL_DIR}/Clavis/${module}")
+endforeach()
+
 install(
     DIRECTORY "${CLAVIS_QML_BUILD_DIR}/Clavis/"
     DESTINATION "${CLAVIS_QML_INSTALL_DIR}/Clavis"
     FILES_MATCHING
         PATTERN "qmldir"
         PATTERN "*.qmltypes"
-        PATTERN "*.so*"
 )
 
 

@@ -59,8 +59,7 @@ Loader {
         id: activeWindowComponent
 
         ActiveWindow {
-            maximumTitleWidth: root.vertical ? 250 : Math.max(48, Math.min(250, root.barVisualItem.width
-                                                                           * 0.18))
+            maximumTitleWidth: root.vertical ? 250 : Math.max(48, Math.min(250, root.screen.width * 0.18))
             vertical: root.vertical
         }
     }
@@ -69,8 +68,8 @@ Loader {
         id: mediaComponent
 
         MediaBar {
-            maximumTitleWidth: Math.max(48, Math.min(180, (root.vertical ? root.barVisualItem.height :
-                                                                           root.barVisualItem.width) * 0.12))
+            maximumTitleWidth: Math.max(48, Math.min(180, (root.vertical ? root.screen.height :
+                                                                           root.screen.width) * 0.12))
             vertical: root.vertical
         }
     }
@@ -90,7 +89,8 @@ Loader {
         id: systemMonitorComponent
 
         SysMonitor {
-            showValues: PersonalizationConfig.barShowMonitorValues
+            flatIndicators: PersonalizationConfig.barShowValues
+            showValues: PersonalizationConfig.barShowValues
             ownerId: "bar-sysmonitor:" + root.screen.name
             vertical: root.vertical
         }

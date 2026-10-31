@@ -59,7 +59,7 @@ stdenv.mkDerivation (finalAttrs: {
     # tests/ 需要 niri / matugen / jq / git 等一堆东西，先不构建
     "-DBUILD_TESTING=OFF"
     # 上游默认会找 git 拿当前 commit 写进 clavis_release.h，这里直接给定
-    "-DCLAVIS_COMMIT=dff9d03"
+    "-DCLAVIS_COMMIT=c3ee54f"
     "-DCLAVIS_QML_INSTALL_DIR=${placeholder "out"}/lib/qt6/qml"
     "-DCLAVIS_CONFIG_INSTALL_DIR=${placeholder "out"}/etc/xdg/quickshell/clavis"
     "-DCLAVIS_SYSTEMD_USER_INSTALL_DIR=${placeholder "out"}/lib/systemd/user"

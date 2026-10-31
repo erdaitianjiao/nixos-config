@@ -25,8 +25,8 @@ StyledMenu {
     signal surfacesChanged
     signal fileActivated(var info)
     width: 360
-    height: Math.min(maximumHeight, 16 + ((root.contents ? Math.max(1, root.contents.count) : 1) + 1) * 34 + 12
-                     + (edge === "bottom" ? tailSize : 0))
+    height: Math.min(480, maximumHeight, 16 + ((root.contents ? Math.max(1, root.contents.count) : 1) + 1) * 34
+                     + 12 + (edge === "bottom" ? tailSize : 0))
 
     cascade: true
     background: DockBubbleSurface {

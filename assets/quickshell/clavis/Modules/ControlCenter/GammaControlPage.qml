@@ -4,12 +4,15 @@ import qs.Common
 import qs.Services
 import qs.Widgets.common
 
-StyledFlickable {
+SidebarFlickable {
     id: root
+    motionEnabled: !searchAnchorsEnabled
+    property real contentPadding: Metrics.pageMargin
+    property bool searchAnchorsEnabled: true
     readonly property var preferences: DisplayColor.preferences
     clip: true
     contentWidth: width
-    contentHeight: content.implicitHeight + Metrics.pageMargin * 2
+    contentHeight: content.implicitHeight + root.contentPadding * 2 + root.contentTopInset
     function timeText(minutes) {
         return Math.floor(minutes / 60).toString().padStart(2, "0") + ":" + (minutes % 60).toString().padStart(
                     2, "0");
@@ -21,16 +24,20 @@ StyledFlickable {
     }
     ColumnLayout {
         id: content
-        width: Math.min(640, Math.max(0, root.width - Metrics.pageMargin * 2))
-        x: Math.max(Metrics.pageMargin, (root.width - width) / 2)
-        y: Metrics.pageMargin
+        width: Math.min(640, Math.max(0, root.width - root.contentPadding * 2))
+        x: Math.max(root.contentPadding, (root.width - width) / 2)
+        y: root.contentPadding + root.contentTopInset
         spacing: Metrics.spacingXL
         InlineStatusBanner {
+            Layout.topMargin: root.gapFor(0, 1)
+
             Layout.fillWidth: true
             visible: !DisplayColor.available
             message: qsTr("The compositor does not provide Gamma control")
         }
         InlineStatusBanner {
+            Layout.topMargin: root.gapFor(1, 1)
+
             Layout.fillWidth: true
             visible: DisplayColor.error !== ""
             tone: "error"
@@ -38,10 +45,13 @@ StyledFlickable {
         }
         SettingsSection {
             id: searchSection0
+            pullExpansion: root.detailExpansion
+            Layout.topMargin: root.gapFor(2, 1)
             Layout.fillWidth: true
             title: searchAnchor0.title
             SettingsSearchAnchor {
                 id: searchAnchor0
+                registerAnchor: root.searchAnchorsEnabled
                 target: searchSection0
                 declaration:
                     '{"id":"general.displays.gamma.section.color","route":"general.displays.gamma","title":"Color","context":"GammaControlPage","icon":"brightness_6","aliases":[]}'
@@ -78,12 +88,14 @@ StyledFlickable {
             }
         }
         SettingsSection {
+            pullExpansion: root.detailExpansion
+            Layout.topMargin: root.gapFor(3, 1)
+
             Layout.fillWidth: true
             flat: true
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Night Mode")
-                iconName: "nightlight"
                 trailing: StyledSwitch {
                     checked: root.preferences.nightEnabled
                     Accessible.name: qsTr("Night Mode")
@@ -103,11 +115,14 @@ StyledFlickable {
         }
         SettingsSection {
             id: searchSection1
+            pullExpansion: root.detailExpansion
+            Layout.topMargin: root.gapFor(4, 1)
             Layout.fillWidth: true
             visible: root.preferences.nightEnabled
             title: searchAnchor1.title
             SettingsSearchAnchor {
                 id: searchAnchor1
+                registerAnchor: root.searchAnchorsEnabled
                 target: searchSection1
                 declaration:
                     '{"id":"general.displays.gamma.section.schedule","route":"general.displays.gamma","title":"Schedule","context":"GammaControlPage","icon":"brightness_6","aliases":[]}'
@@ -138,7 +153,6 @@ StyledFlickable {
                 Layout.fillWidth: true
                 visible: root.preferences.mode === "time"
                 title: qsTr("Night starts")
-                iconName: "nightlight"
                 trailing: OutlinedTextField {
                     Layout.preferredWidth: 140
                     Layout.minimumWidth: 140
@@ -156,7 +170,6 @@ StyledFlickable {
                 Layout.fillWidth: true
                 visible: root.preferences.mode === "time"
                 title: qsTr("Day starts")
-                iconName: "light_mode"
                 trailing: OutlinedTextField {
                     Layout.preferredWidth: 140
                     Layout.minimumWidth: 140
@@ -265,11 +278,14 @@ StyledFlickable {
 
         SettingsSection {
             id: searchSection2
+            pullExpansion: root.detailExpansion
+            Layout.topMargin: root.gapFor(5, 1)
             Layout.fillWidth: true
             visible: root.preferences.nightEnabled && root.preferences.mode !== "fixed"
             title: searchAnchor2.title
             SettingsSearchAnchor {
                 id: searchAnchor2
+                registerAnchor: root.searchAnchorsEnabled
                 target: searchSection2
                 declaration:
                     '{"id":"general.displays.gamma.section.current-status","route":"general.displays.gamma","title":"Current status","context":"GammaControlPage","icon":"brightness_6","aliases":[]}'
@@ -280,7 +296,6 @@ StyledFlickable {
                 Layout.fillWidth: true
                 visible: true
                 title: qsTr("Scheduled temperature")
-                iconName: "thermostat"
                 supportingText: ""
                 trailing: Text {
                     text: qsTr("%1 K").arg(DisplayColor.schedule.temperature)
@@ -293,7 +308,6 @@ StyledFlickable {
                 Layout.fillWidth: true
                 visible: true
                 title: qsTr("Period")
-                iconName: DisplayColor.schedule.period === "day" ? "light_mode" : "nightlight"
                 supportingText: DisplayColor.schedule.transitioning ? qsTr("Transitioning") : ""
                 trailing: Text {
                     text: DisplayColor.schedule.period === "day" ? qsTr("Daytime") : qsTr("Nighttime")
@@ -306,7 +320,6 @@ StyledFlickable {
                 Layout.fillWidth: true
                 visible: DisplayColor.schedule.next > 0
                 title: DisplayColor.schedule.transitioning ? qsTr("Transition ends") : qsTr("Next transition")
-                iconName: "schedule"
                 supportingText: ""
                 trailing: Text {
                     text: Qt.formatDateTime(new Date(DisplayColor.schedule.next), "ddd hh:mm")
@@ -318,6 +331,8 @@ StyledFlickable {
         }
 
         InlineStatusBanner {
+            Layout.topMargin: root.gapFor(6, 1)
+
             Layout.fillWidth: true
             readonly property var failedOutputs: DisplayColor.outputs.filter(o => o.state === "failed"
                                                                                   || o.state

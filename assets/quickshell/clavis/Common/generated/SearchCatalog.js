@@ -1235,6 +1235,24 @@ var catalog = {
     },
     {
       "aliases": [
+        "corner actions",
+        "screen corners"
+      ],
+      "anchor": true,
+      "context": "HotCornersPage",
+      "icon": "open_in_full",
+      "id": "general.displays.configuration.section.hot-corners",
+      "path": [
+        "general",
+        "displays",
+        "configuration"
+      ],
+      "route": "general.displays.configuration",
+      "source": "DisplayConfigurationPage.qml",
+      "title": "Hot corners"
+    },
+    {
+      "aliases": [
         "size",
         "position",
         "magnification"
@@ -1351,6 +1369,20 @@ var catalog = {
       "route": "general.bar",
       "source": "GeneralBarPage.qml",
       "title": "Position"
+    },
+    {
+      "aliases": [],
+      "anchor": true,
+      "context": "GeneralBarPage",
+      "icon": "space_bar",
+      "id": "general.bar.section.size-spacing",
+      "path": [
+        "general",
+        "bar"
+      ],
+      "route": "general.bar",
+      "source": "GeneralBarPage.qml",
+      "title": "Size and spacing"
     },
     {
       "aliases": [],
@@ -1501,6 +1533,19 @@ var catalog = {
       "route": "keystone",
       "source": "KeystonePage.qml",
       "title": "Keystone style"
+    },
+    {
+      "aliases": [],
+      "anchor": true,
+      "context": "KeystonePage",
+      "icon": "space_bar",
+      "id": "keystone.section.size-spacing",
+      "path": [
+        "keystone"
+      ],
+      "route": "keystone",
+      "source": "KeystonePage.qml",
+      "title": "Size and spacing"
     },
     {
       "aliases": [],
@@ -1750,6 +1795,22 @@ var catalog = {
       "title": "Clipboard"
     },
     {
+      "aliases": [
+        "window controls",
+        "traffic lights"
+      ],
+      "anchor": true,
+      "context": "ThemePage",
+      "icon": "window",
+      "id": "theme.section.settings-window",
+      "path": [
+        "theme"
+      ],
+      "route": "theme",
+      "source": "ThemePage.qml",
+      "title": "Settings window"
+    },
+    {
       "aliases": [],
       "anchor": true,
       "context": "ThemePage",
@@ -1939,6 +2000,7 @@ function title(id) {
     case "general.default-apps.section.multimedia": return qsTranslate("DefaultAppsPage", "Multimedia");
     case "general.displays.configuration.section.layout": return qsTranslate("DisplayConfigurationPage", "Layout");
     case "general.displays.configuration.section.output-settings": return qsTranslate("DisplayConfigurationPage", "Output settings");
+    case "general.displays.configuration.section.hot-corners": return qsTranslate("HotCornersPage", "Hot corners");
     case "general.dock.section.appearance": return qsTranslate("DockPage", "Appearance");
     case "general.dock.section.behavior": return qsTranslate("DockPage", "Behavior");
     case "general.dock.section.previews": return qsTranslate("DockPage", "Window previews");
@@ -1946,6 +2008,7 @@ function title(id) {
     case "general.displays.gamma.section.schedule": return qsTranslate("GammaControlPage", "Schedule");
     case "general.displays.gamma.section.current-status": return qsTranslate("GammaControlPage", "Current status");
     case "general.bar.section.position": return qsTranslate("GeneralBarPage", "Position");
+    case "general.bar.section.size-spacing": return qsTranslate("GeneralBarPage", "Size and spacing");
     case "general.bar.section.components": return qsTranslate("GeneralBarPage", "Components");
     case "general.effects.section.background": return qsTranslate("GeneralEffectsPage", "Background");
     case "general.section.interface": return qsTranslate("GeneralOverviewPage", "Interface");
@@ -1957,6 +2020,7 @@ function title(id) {
     case "general.sidebar.section.system-cards": return qsTranslate("GeneralSidebarPage", "System cards");
     case "keystone.horizontal-clock.section.horizontal-clock-style": return qsTranslate("HorizontalClockPage", "Horizontal clock style");
     case "keystone.section.keystone-style": return qsTranslate("KeystonePage", "Keystone style");
+    case "keystone.section.size-spacing": return qsTranslate("KeystonePage", "Size and spacing");
     case "keystone.section.mouse-actions": return qsTranslate("KeystonePage", "Mouse actions");
     case "keystone.section.media-controls": return qsTranslate("KeystonePage", "Media controls");
     case "keystone.section.keyboard-indicators": return qsTranslate("KeystonePage", "Keyboard indicators");
@@ -1975,6 +2039,7 @@ function title(id) {
     case "general.spotlight.section.applications": return qsTranslate("SpotlightPage", "Applications");
     case "general.spotlight.section.web-search": return qsTranslate("SpotlightPage", "Web search");
     case "general.spotlight.section.clipboard": return qsTranslate("SpotlightPage", "Clipboard");
+    case "theme.section.settings-window": return qsTranslate("ThemePage", "Settings window");
     case "theme.section.matugen-color-scheme": return qsTranslate("ThemePage", "matugen color scheme");
     case "theme.section.super-key-appearance": return qsTranslate("ThemePage", "Super key appearance");
     case "theme.section.lock-screen": return qsTranslate("ThemePage", "Lock screen");

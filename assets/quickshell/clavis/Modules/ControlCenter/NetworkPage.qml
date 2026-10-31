@@ -299,7 +299,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: NetworkService.wifiEnabled ? "wifi" : "wifi_off"
                 title: qsTr("Wi-Fi")
                 supportingText: !NetworkService.available ? "" : !NetworkService.wifiAvailable ? qsTr(
                                                                                                      "No wireless adapter detected") :

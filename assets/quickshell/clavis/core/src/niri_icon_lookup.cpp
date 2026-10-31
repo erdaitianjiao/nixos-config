@@ -203,10 +203,14 @@ QString NiriIconLookup::findIconFile(const QString &iconName)
         return path;
     }
 
-    const QStringList names = iconName.contains('.') ? QStringList{iconName}
-                                                     : QStringList{iconName + QStringLiteral(".svg"),
-                                                                   iconName + QStringLiteral(".png"),
-                                                                   iconName + QStringLiteral(".xpm")};
+    // Reverse-DNS icon names contain dots too; only image suffixes denote files.
+    const QString suffix = QFileInfo(iconName).suffix().toLower();
+    const bool hasImageSuffix =
+        suffix == QStringLiteral("svg") || suffix == QStringLiteral("png") || suffix == QStringLiteral("xpm");
+    const QStringList names =
+        hasImageSuffix ? QStringList{iconName}
+                       : QStringList{iconName + QStringLiteral(".svg"), iconName + QStringLiteral(".png"),
+                                     iconName + QStringLiteral(".xpm")};
 
     QStringList roots;
     const QString dataHome = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);

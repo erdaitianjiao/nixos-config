@@ -1,11 +1,14 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Services
+import qs.Widgets.common
 import "./notifications"
 import "./infoTools"
 
-Item {
+SidebarFlickable {
     id: root
+    contentWidth: width
+    contentHeight: infoContent.height + contentTopInset
 
     signal imageSelectionRequested(bool forAvatar)
     signal bannerColorRequested
@@ -28,10 +31,14 @@ Item {
                                                                      false)
 
     ColumnLayout {
-        anchors.fill: parent
-        spacing: 12
+        id: infoContent
+        y: root.contentTopInset
+        width: root.width
+        height: root.height + root.sectionExpansion * 2
+        spacing: 12 + root.sectionExpansion
 
         ProfileHeaderCard {
+
             Layout.fillWidth: true
             Layout.preferredHeight: implicitHeight
             screenName: root.screenName
@@ -40,11 +47,13 @@ Item {
         }
 
         NotificationList {
+
             Layout.fillWidth: true
             Layout.fillHeight: true
         }
 
         InfoToolDrawer {
+
             Layout.fillWidth: true
             Layout.preferredHeight: implicitHeight
             active: root.isForeground

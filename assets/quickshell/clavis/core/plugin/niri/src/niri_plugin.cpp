@@ -7,7 +7,9 @@
 #include <QTimer>
 #include <algorithm>
 
-NiriPlugin::NiriPlugin(QObject *parent) : QObject(parent)
+NiriPlugin::NiriPlugin(QObject *parent)
+    : QObject(parent), m_floatingParallax(NiriFloatingParallax::shared()),
+      m_floatingParallaxLease(m_floatingParallax->acquire())
 {
     connect(&m_client, &NiriIpcClient::connectedChanged, this, &NiriPlugin::connectionChanged);
     connect(&m_client, &NiriIpcClient::eventReceived, this, &NiriPlugin::handleEvent);
@@ -17,6 +19,7 @@ NiriPlugin::NiriPlugin(QObject *parent) : QObject(parent)
 
 NiriPlugin::~NiriPlugin()
 {
+    m_floatingParallax->release(m_floatingParallaxLease);
     QObject::disconnect(&m_client, nullptr, this, nullptr);
     m_client.disconnectFromNiri();
 }
@@ -56,6 +59,8 @@ void NiriPlugin::connectionChanged()
         return;
     m_wasConnected = online;
     ++m_connectionGeneration;
+    if (m_floatingParallax->owns(m_floatingParallaxLease))
+        m_floatingParallax->setConnected(online, m_client.socketPath());
     ++m_outputRefreshGeneration;
     m_supportsMinimize = false;
     m_supportsMinimizeAnimation = false;
@@ -398,10 +403,13 @@ void NiriPlugin::handleEvent(const QJsonObject &event)
             const quint64 id = change.at(0).toInteger();
             const QJsonArray pos =
                 change.at(1).toObject().value(QStringLiteral("pos_in_scrolling_layout")).toArray();
+            const QJsonArray point =
+                change.at(1).toObject().value(QStringLiteral("tile_pos_in_workspace_view")).toArray();
             for (NiriWindow &window : m_windows) {
                 if (window.id == id) {
                     window.layoutColumn = pos.size() > 0 ? pos.at(0).toInt(999999) : 999999;
                     window.layoutRow = pos.size() > 1 ? pos.at(1).toInt(999999) : 999999;
+                    window.hasLayoutPosition = point.size() == 2;
                 }
             }
         }
@@ -477,6 +485,11 @@ NiriWindow NiriPlugin::parseWindow(const QJsonObject &object)
                                .toArray();
     window.layoutColumn = pos.size() > 0 ? pos.at(0).toInt(999999) : 999999;
     window.layoutRow = pos.size() > 1 ? pos.at(1).toInt(999999) : 999999;
+    const auto point = object.value(QStringLiteral("layout"))
+                           .toObject()
+                           .value(QStringLiteral("tile_pos_in_workspace_view"))
+                           .toArray();
+    window.hasLayoutPosition = point.size() == 2;
 
     const NiriIconLookup::IconInfo icon = m_iconLookup.resolve(window.appId);
     window.iconPath = icon.iconPath;
@@ -603,6 +616,12 @@ void NiriPlugin::setError(const QString &message)
     emit errorChanged();
 }
 
+void NiriPlugin::setFloatingParallaxOffsets(const QVariantMap &offsets)
+{
+    if (m_floatingParallax->owns(m_floatingParallaxLease))
+        m_floatingParallax->setOffsets(offsets);
+}
+
 void NiriPlugin::publishState(bool workspaceChanged, bool windowChanged, bool outputChanged)
 {
     if (!workspaceChanged && !windowChanged && !outputChanged)
@@ -611,6 +630,8 @@ void NiriPlugin::publishState(bool workspaceChanged, bool windowChanged, bool ou
     sortWorkspaces();
     sortWindows();
     recomputeDerivedState();
+    if (m_floatingParallax->owns(m_floatingParallaxLease))
+        m_floatingParallax->setWindows(m_windows);
 
     if (workspaceChanged || windowChanged) {
         m_workspaceModel.setWorkspaces(m_workspaces);

@@ -9,15 +9,16 @@ Rectangle {
     property string title: ""
     property string iconName: ""
     property string supportingText: ""
+    property real pullExpansion: 0
     property real contentSpacing: Metrics.spacingXS
     // General subpages use the same semantic grouping without the overview
     // page's card containment. Keep the default so first-level pages retain
     // their existing visual language.
     property bool flat: false
-    // Flat sections normally render title glyphs without containment. A small
-    // number of overview-like pages keep their original tonal title icon.
-    property bool flatIconContainer: false
+    // Heading badges retain their tonal container on both flat and card sections.
+    property bool flatIconContainer: true
     readonly property bool hasIconContainer: !root.flat || root.flatIconContainer
+    property alias headerTrailing: headerTrailingSlot.data
     default property alias content: body.data
 
     implicitHeight: sectionLayout.implicitHeight + (flat ? 0 : Metrics.cardPadding * 2)
@@ -27,7 +28,7 @@ Rectangle {
     ColumnLayout {
         id: sectionLayout
 
-        spacing: Metrics.spacingS
+        spacing: Metrics.spacingS + root.pullExpansion * 1.5
 
         anchors {
             fill: parent
@@ -36,7 +37,8 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            visible: root.title.length > 0 || root.iconName.length > 0
+            visible: root.title.length > 0 || root.iconName.length > 0 || headerTrailingSlot.children.length
+                     > 0
             spacing: Metrics.spacingS
 
             Rectangle {
@@ -51,9 +53,9 @@ Rectangle {
                     text: root.iconName
                     iconSize: Metrics.iconM
                     fill: root.hasIconContainer ? 1 : 0
-                    color: root.hasIconContainer ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant
+                    color: root.hasIconContainer ? Appearance.colors.colOnSecondaryContainer :
+                                                   Appearance.colors.colOnSurfaceVariant
                 }
-
             }
 
             Text {
@@ -67,6 +69,13 @@ Rectangle {
                 elide: Text.ElideRight
             }
 
+            RowLayout {
+                id: headerTrailingSlot
+
+                visible: children.length > 0
+                Layout.alignment: Qt.AlignVCenter
+                spacing: Metrics.spacingS
+            }
         }
 
         Text {
@@ -83,17 +92,13 @@ Rectangle {
             id: body
 
             Layout.fillWidth: true
-            spacing: root.contentSpacing
+            spacing: root.contentSpacing + root.pullExpansion
         }
-
     }
 
     Behavior on implicitHeight {
-        enabled: !root.flat
+        enabled: !root.flat && root.pullExpansion === 0
 
-        ElementMoveAnimation {
-        }
-
+        ElementMoveAnimation {}
     }
-
 }

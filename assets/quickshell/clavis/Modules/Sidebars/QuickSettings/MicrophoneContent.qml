@@ -1,6 +1,4 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Controls.Material
 import QtQuick.Layouts
 import qs.Common
 import qs.Components
@@ -11,15 +9,7 @@ import qs.Widgets.common
 WidgetPanel {
     id: root
 
-    title: qsTr("Microphone")
-    icon: "mic"
-    showBackButton: true
-    backAction: () => WidgetState.quickSettingsView = "settings"
-
     property bool foreground: false
-    property bool isActive: foreground && WidgetState.quickSettingsView === "microphone"
-    property bool inputDevicesExpanded: false
-    readonly property bool showInputDevices: root.inputDevicesExpanded
     readonly property string stateMessage: {
         if (Volume.lastError.length > 0)
             return Volume.lastError;
@@ -30,10 +20,10 @@ WidgetPanel {
         return "";
     }
 
-    onIsActiveChanged: {
-        if (!isActive)
-            inputDevicesExpanded = false;
-    }
+    title: qsTr("Microphone")
+    icon: "mic"
+    showBackButton: true
+    backAction: () => WidgetState.quickSettingsView = "settings"
 
     headerTools: IconButton {
         controlSize: 40
@@ -43,148 +33,111 @@ WidgetPanel {
         accessibleName: qsTr("Open advanced sound settings")
         hoverStateLayerColor: Appearance.colors.colLayer2Hover
         pressedStateLayerColor: Appearance.colors.colLayer2Active
-        onClicked: Volume.openMixer()
+        onClicked: {
+            WidgetState.closeAllPopups();
+            Volume.openMixer();
+        }
     }
 
     ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        spacing: Appearance.spacing.small
+        spacing: Metrics.spacingL
 
-        ProgressBar {
-            Layout.fillWidth: true
-            Layout.preferredHeight: Volume.ready ? 0 : 4
-            opacity: Volume.ready ? 0 : 1
-            indeterminate: true
-            Material.accent: Appearance.colors.colPrimary
-
-            Behavior on Layout.preferredHeight {
-                ElementMoveAnimation {}
-            }
-            Behavior on opacity {
-                ElementMoveAnimation {}
-            }
-        }
-
-        InlineStatusBanner {
-            Layout.fillWidth: true
-            visible: root.stateMessage.length > 0
-            tone: Volume.lastError.length > 0 ? "error" : "info"
-            iconName: !Volume.ready ? "hourglass_top" : Volume.lastError.length > 0 ? "error" : "info"
-            message: root.stateMessage
-        }
-
-        StyledFlickable {
+        SidebarFlickable {
+            id: sidebarScroll
             Layout.fillWidth: true
             Layout.fillHeight: true
             contentWidth: width
-            contentHeight: microphoneContent.implicitHeight
+            contentHeight: content.implicitHeight + sidebarScroll.contentTopInset
 
             ColumnLayout {
-                id: microphoneContent
-
-                width: parent.width - Appearance.spacing.small
-                spacing: Appearance.spacing.small
+                id: content
+                y: sidebarScroll.contentTopInset
+                width: parent.width
+                spacing: Metrics.spacingL
+                InlineStatusBanner {
+                    Layout.topMargin: sidebarScroll.gapFor(0, 1)
+                    Layout.fillWidth: true
+                    visible: root.stateMessage.length > 0
+                    tone: Volume.lastError.length > 0 ? "error" : "info"
+                    message: root.stateMessage
+                }
 
                 SettingsSection {
+                    pullExpansion: sidebarScroll.detailExpansion
+                    Layout.topMargin: sidebarScroll.gapFor(1, 1)
+
                     Layout.fillWidth: true
-                    visible: Volume.ready && (Volume.inputDevices.length > 0 || Volume.inputAvailable)
+                    visible: Volume.ready && Volume.inputAvailable
                     title: qsTr("Input")
+                    iconName: "mic"
 
                     VolumeSlider {
                         Layout.fillWidth: true
-                        visible: Volume.inputAvailable
                         title: Volume.sourceName || qsTr("Default input")
-                        iconName: "mic"
+                        supportingText: Volume.nodeSupportingText(Volume.source)
+                        iconName: Volume.nodeIconName(Volume.source)
                         volume: Volume.sourceVolume
                         muted: Volume.sourceMuted
                         available: Volume.inputAvailable
-                        showMuteButton: false
+                        showMuteButton: true
                         onVolumeMoved: value => Volume.setSourceVolume(value)
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Layout.minimumHeight: 40
-                        visible: Volume.inputDevices.length > 1 || !Volume.inputAvailable
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: qsTr("Input devices")
-                            color: Appearance.colors.colOnLayer1
-                            font.family: Fonts.ui
-                            font.pixelSize: 12
-                            font.weight: Font.Medium
-                        }
-
-                        IconButton {
-                            selected: root.inputDevicesExpanded
-                            iconName: "expand_more"
-                            iconSize: 22
-                            iconColor: Appearance.colors.colOnLayer2
-                            selectedIconColor: Appearance.colors.colOnSecondaryContainer
-                            selectedContainerColor: Appearance.colors.colSecondaryContainer
-                            selectedHoverStateLayerColor: Appearance.colors.colSecondaryContainerHover
-                            selectedPressedStateLayerColor: Appearance.colors.colSecondaryContainerActive
-                            iconRotation: root.inputDevicesExpanded ? 180 : 0
-                            accessibleName: root.inputDevicesExpanded ? qsTr("Collapse input devices") : qsTr(
-                                                                            "Expand input devices")
-                            hoverStateLayerColor: Appearance.colors.colLayer2Hover
-                            pressedStateLayerColor: Appearance.colors.colLayer2Active
-                            onClicked: root.inputDevicesExpanded = !root.inputDevicesExpanded
-
-                            Behavior on iconRotation {
-                                ElementMoveAnimation {}
-                            }
-                        }
-                    }
-
-                    Item {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.showInputDevices ? inputDeviceList.targetHeight : 0
-                        opacity: root.showInputDevices ? 1 : 0
-                        clip: true
-
-                        Behavior on Layout.preferredHeight {
-                            ElementMoveAnimation {}
-                        }
-                        Behavior on opacity {
-                            ElementMoveAnimation {}
-                        }
-
-                        StyledListView {
-                            id: inputDeviceList
-
-                            readonly property real baseContentHeight: count * 56 + Math.max(0, count - 1)
-                                                                      * spacing
-                            readonly property real targetHeight: Math.min(Sizes.sidebarScrollableListMaxHeight,
-                                                                          Math.max(baseContentHeight,
-                                                                                   contentHeight))
-
-                            anchors.fill: parent
-                            spacing: Appearance.spacing.xSmall
-                            clip: true
-                            boundsBehavior: Flickable.StopAtBounds
-                            interactive: root.showInputDevices && contentHeight > height
-                            model: Volume.inputDevices
-
-                            delegate: SettingsRow {
-                                required property var modelData
-
-                                width: ListView.view.width
-                                iconName: Volume.nodeIconName(modelData)
-                                title: Volume.nodeDisplayName(modelData)
-                                interactive: !Volume.isDefaultInput(modelData)
-                                highlighted: Volume.isDefaultInput(modelData)
-                                onClicked: Volume.setDefaultInput(modelData)
-                            }
-                        }
+                        onMuteRequested: Volume.toggleSourceMute()
                     }
                 }
 
-                Item {
+                SettingsSection {
+                    pullExpansion: sidebarScroll.detailExpansion
+                    Layout.topMargin: sidebarScroll.gapFor(2, 1)
+
                     Layout.fillWidth: true
-                    Layout.preferredHeight: Appearance.spacing.small
+                    visible: Volume.ready && Volume.inputDevices.length > 0
+                    title: qsTr("Input devices")
+                    iconName: "settings_voice"
+                    contentSpacing: Metrics.spacingL
+
+                    Repeater {
+                        model: Volume.inputDevices
+
+                        ColumnLayout {
+                            id: device
+                            required property var modelData
+                            required property int index
+                            Layout.topMargin: sidebarScroll.gapFor(index, 0.16)
+
+                            Layout.fillWidth: true
+                            spacing: Metrics.spacingXS + sidebarScroll.detailExpansion
+
+                            SettingsRow {
+                                Layout.fillWidth: true
+                                title: Volume.nodeDisplayName(device.modelData)
+                                supportingText: Volume.nodeSupportingText(device.modelData)
+                                iconName: Volume.nodeIconName(device.modelData)
+                                highlighted: Volume.isDefaultInput(device.modelData)
+                                interactive: !highlighted
+                                onClicked: Volume.setDefaultInput(device.modelData)
+                                trailing: MaterialSymbol {
+                                    visible: Volume.isDefaultInput(device.modelData)
+                                    text: "check_circle"
+                                    iconSize: Metrics.iconM
+                                    color: Appearance.colors.colPrimary
+                                }
+                            }
+
+                            VolumeSlider {
+                                Layout.fillWidth: true
+                                visible: !Volume.isDefaultInput(device.modelData)
+                                title: qsTr("Volume")
+                                iconName: Volume.nodeIconName(device.modelData)
+                                volume: Volume.nodeVolume(device.modelData)
+                                muted: Volume.nodeMuted(device.modelData)
+                                showMuteButton: true
+                                onVolumeMoved: value => Volume.setNodeVolume(device.modelData, value)
+                                onMuteRequested: Volume.toggleNodeMute(device.modelData)
+                            }
+                        }
+                    }
                 }
             }
         }

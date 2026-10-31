@@ -8,11 +8,12 @@ import "../../../Common/functions/SystemFormat.js" as Format
 
 TopBarPill {
     id: root
+    property bool flatIndicators: false
 
     property bool vertical: false
     property bool showValues: true
     property string ownerId: "bar-sysmonitor"
-    readonly property bool isHovered: mouseArea.containsMouse
+    readonly property bool isHovered: mouseArea.pointerHovered
     readonly property var memory: SystemMonitorService.memory || ({})
     readonly property var cpu: SystemMonitorService.cpu || ({})
     readonly property var disk: Format.rootDisk(SystemMonitorService.disks)
@@ -36,8 +37,7 @@ TopBarPill {
     readonly property real indicatorSize: root.vertical ? root.verticalIndicatorSize :
                                                           root.horizontalIndicatorSize
     readonly property real indicatorIconSize: 15
-    readonly property real indicatorSpacing: root.vertical ? Appearance.spacing.small :
-                                                             Appearance.spacing.xSmall
+    readonly property real indicatorSpacing: Sizes.barItemSpacing + (root.showValues ? 0 : Metrics.spacingXXS)
 
     readonly property string tooltipText: [qsTr("Memory") + "    " + root.bytesPair(root.memory), qsTr("Disk")
         + "    " + root.bytesPair(root.disk), qsTr("Temperature") + "    " + Format.temperature(root.temperatureValue,
@@ -70,85 +70,90 @@ TopBarPill {
                                                                                  + " / " + total;
     }
 
-    implicitWidth: root.vertical ? Sizes.barVisualThickness : resourceLayout.implicitWidth + 2
-                                   * Sizes.barPillHorizontalPadding
-
-    implicitHeight: root.vertical ? resourceLayout.implicitHeight + 2 * Sizes.barPillHorizontalPadding :
-                                    Sizes.barPillThickness
+    implicitWidth: root.vertical ? root.pillThickness : mouseArea.implicitWidth
+    implicitHeight: root.vertical ? mouseArea.implicitHeight : root.pillThickness
     Component.onCompleted: SystemMonitorService.setConsumerModules(root.ownerId, ["cpu", "memory", "disk"])
     Component.onDestruction: SystemMonitorService.clearConsumer(root.ownerId)
 
-    GridLayout {
-        id: resourceLayout
-
-        anchors.centerIn: parent
-        rowSpacing: root.indicatorSpacing
-        columnSpacing: root.indicatorSpacing
-        columns: root.vertical ? 1 : 4
-
-        ResourcePie {
-            Layout.alignment: Qt.AlignCenter
-            indicatorSize: root.indicatorSize
-            iconSize: root.indicatorIconSize
-            value: root.memoryUsage
-            showText: root.showValues
-            vertical: root.vertical
-            displayText: root.memoryDisplayText
-            icon: "memory_alt"
-            fillColor: Appearance.colors.colPrimary
-            trackColor: Appearance.colors.colPrimaryContainer
-            iconColor: Appearance.colors.colOnPrimary
-        }
-
-        ResourcePie {
-            Layout.alignment: Qt.AlignCenter
-            indicatorSize: root.indicatorSize
-            iconSize: root.indicatorIconSize
-            value: root.diskUsage
-            showText: root.showValues
-            vertical: root.vertical
-            displayText: root.diskDisplayText
-            icon: "hard_drive"
-            fillColor: Appearance.colors.colSecondary
-            trackColor: Appearance.colors.colSecondaryContainer
-            iconColor: Appearance.colors.colOnSecondary
-        }
-
-        ResourcePie {
-            Layout.alignment: Qt.AlignCenter
-            indicatorSize: root.indicatorSize
-            iconSize: root.indicatorIconSize
-            value: root.temperatureUsage
-            showText: root.showValues
-            vertical: root.vertical
-            displayText: root.temperatureDisplayText
-            icon: "thermostat"
-            fillColor: Appearance.colors.colTertiary
-            trackColor: Appearance.colors.colTertiaryContainer
-            iconColor: Appearance.colors.colOnTertiary
-        }
-
-        ResourcePie {
-            Layout.alignment: Qt.AlignCenter
-            indicatorSize: root.indicatorSize
-            iconSize: root.indicatorIconSize
-            value: root.cpuUsage
-            showText: root.showValues
-            vertical: root.vertical
-            displayText: root.cpuDisplayText
-            icon: "developer_board"
-            fillColor: Appearance.colors.colTertiary
-            trackColor: Appearance.colors.colTertiaryContainer
-            iconColor: Appearance.colors.colOnTertiary
-        }
-    }
-
-    MouseArea {
+    BarActionButton {
         id: mouseArea
 
         anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+        vertical: root.vertical
+        contentPadding: root.pillPadding + 2
+        contentItem: Item {
+            implicitWidth: resourceLayout.implicitWidth
+            implicitHeight: resourceLayout.implicitHeight
+            GridLayout {
+                id: resourceLayout
+
+                anchors.centerIn: parent
+                rowSpacing: root.indicatorSpacing
+                columnSpacing: root.indicatorSpacing
+                columns: root.vertical ? 1 : 4
+
+                ResourcePie {
+                    flat: root.flatIndicators
+                    Layout.alignment: Qt.AlignCenter
+                    indicatorSize: root.indicatorSize
+                    iconSize: root.indicatorIconSize
+                    value: root.memoryUsage
+                    showText: root.showValues
+                    vertical: root.vertical
+                    displayText: root.memoryDisplayText
+                    icon: "memory_alt"
+                    fillColor: Appearance.colors.colPrimary
+                    trackColor: Appearance.colors.colPrimaryContainer
+                    iconColor: Appearance.colors.colOnPrimary
+                }
+
+                ResourcePie {
+                    flat: root.flatIndicators
+                    Layout.alignment: Qt.AlignCenter
+                    indicatorSize: root.indicatorSize
+                    iconSize: root.indicatorIconSize
+                    value: root.diskUsage
+                    showText: root.showValues
+                    vertical: root.vertical
+                    displayText: root.diskDisplayText
+                    icon: "hard_drive"
+                    fillColor: Appearance.colors.colSecondary
+                    trackColor: Appearance.colors.colSecondaryContainer
+                    iconColor: Appearance.colors.colOnSecondary
+                }
+
+                ResourcePie {
+                    flat: root.flatIndicators
+                    Layout.alignment: Qt.AlignCenter
+                    indicatorSize: root.indicatorSize
+                    iconSize: root.indicatorIconSize
+                    value: root.temperatureUsage
+                    showText: root.showValues
+                    vertical: root.vertical
+                    displayText: root.temperatureDisplayText
+                    icon: "thermostat"
+                    fillColor: Appearance.colors.colTertiary
+                    trackColor: Appearance.colors.colTertiaryContainer
+                    iconColor: Appearance.colors.colOnTertiary
+                }
+
+                ResourcePie {
+                    flat: root.flatIndicators
+                    Layout.alignment: Qt.AlignCenter
+                    indicatorSize: root.indicatorSize
+                    iconSize: root.indicatorIconSize
+                    value: root.cpuUsage
+                    showText: root.showValues
+                    vertical: root.vertical
+                    displayText: root.cpuDisplayText
+                    icon: "developer_board"
+                    fillColor: Appearance.colors.colTertiary
+                    trackColor: Appearance.colors.colTertiaryContainer
+                    iconColor: Appearance.colors.colOnTertiary
+                }
+            }
+        }
+        Accessible.name: root.tooltipText
         onClicked: ApplicationService.launchCommand(["gnome-system-monitor"])
     }
 

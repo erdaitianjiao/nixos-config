@@ -333,6 +333,7 @@ ColumnLayout {
             from: 0.25
             to: 0.8
             stepSize: 0.001
+            snapMode: Slider.SnapAlways
             hoverEnabled: true
             Accessible.name: qsTr("Opacity")
             Binding {

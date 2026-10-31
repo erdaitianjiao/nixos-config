@@ -117,13 +117,19 @@ StyledFlickable {
             Layout.fillWidth: true
             spacing: 8
 
-            MaterialSymbol {
-                Layout.preferredWidth: 30
-                Layout.preferredHeight: 30
-                text: section.iconName
-                iconSize: 26
-                fill: 1
-                color: Appearance.colors.colOnSecondaryContainer
+            Rectangle {
+                Layout.preferredWidth: Metrics.controlHeightM
+                Layout.preferredHeight: Metrics.controlHeightM
+                radius: Appearance.rounding.normal
+                color: Appearance.colors.colSecondaryContainer
+
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    text: section.iconName
+                    iconSize: Metrics.iconM
+                    fill: 1
+                    color: Appearance.colors.colOnSecondaryContainer
+                }
             }
 
             Text {
@@ -438,7 +444,6 @@ StyledFlickable {
 
                     SettingsRow {
                         Layout.fillWidth: true
-                        iconName: "splitscreen"
                         title: qsTr("Per-monitor wallpapers")
 
                         trailing: StyledSwitch {
@@ -834,7 +839,6 @@ StyledFlickable {
 
                 SettingsRow {
                     Layout.fillWidth: true
-                    iconName: "swap_vert"
                     title: qsTr("Vertical parallax")
 
                     trailing: StyledSwitch {
@@ -847,7 +851,6 @@ StyledFlickable {
 
                 SettingsRow {
                     Layout.fillWidth: true
-                    iconName: "workspaces"
                     title: qsTr("Follow workspaces")
 
                     trailing: Item {
@@ -879,7 +882,6 @@ StyledFlickable {
 
                 SettingsRow {
                     Layout.fillWidth: true
-                    iconName: "dock_to_left"
                     title: qsTr("Follow sidebars")
 
                     trailing: StyledSwitch {
@@ -892,7 +894,6 @@ StyledFlickable {
 
                 SettingsRow {
                     Layout.fillWidth: true
-                    iconName: "view_column"
                     title: qsTr("Follow tiled-window focus")
 
                     trailing: StyledSwitch {
@@ -900,6 +901,18 @@ StyledFlickable {
                         checked: PersonalizationConfig.parallaxFollowTiledColumns
                         Accessible.name: qsTr("Follow tiled-window focus")
                         onToggled: PersonalizationConfig.setParallaxFollowTiledColumns(checked)
+                    }
+                }
+
+                SettingsRow {
+                    Layout.fillWidth: true
+                    title: qsTr("Floating window parallax")
+
+                    trailing: StyledSwitch {
+                        enabled: !root.desktopUsesAwww
+                        checked: PersonalizationConfig.parallaxFloatingWindowsEnabled
+                        Accessible.name: qsTr("Floating window parallax")
+                        onToggled: PersonalizationConfig.setParallaxFloatingWindowsEnabled(checked)
                     }
                 }
 
@@ -1002,7 +1015,6 @@ StyledFlickable {
 
                 SettingsRow {
                     Layout.fillWidth: true
-                    iconName: "visibility"
                     title: qsTr("Enable background")
 
                     trailing: StyledSwitch {
@@ -1014,7 +1026,6 @@ StyledFlickable {
 
                 SettingsRow {
                     Layout.fillWidth: true
-                    iconName: "sync"
                     title: qsTr("Use desktop wallpaper")
 
                     trailing: StyledSwitch {
@@ -1026,7 +1037,6 @@ StyledFlickable {
 
                 SettingsRow {
                     Layout.fillWidth: true
-                    iconName: "splitscreen"
                     title: qsTr("Per-monitor wallpapers")
 
                     trailing: StyledSwitch {

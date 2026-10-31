@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import qs.Common
+import qs.Components
 import qs.Services
 import qs.Widgets.common
 
@@ -9,16 +10,18 @@ WidgetPanel {
     id: root
 
     property var screen: null
-    title: ""
+    title: qsTr("Quick Settings")
     icon: "settings"
 
     property bool editMode: false
     readonly property bool capturesWheel: editMode
-    property int toggleColumns: 5
+    readonly property int toggleColumns: Math.max(1, Math.floor((togglePanel.width - togglePadding * 2
+                                                                 + toggleSpacing) / (baseCellHeight * 1.25
+                                                                                     + toggleSpacing)))
     property real toggleSpacing: 6
     property real togglePadding: 6
     property real baseCellHeight: 56
-    property real contentSpacing: 14
+    property real contentSpacing: Metrics.spacingL
     property real headerButtonSize: 40
     property real headerButtonSpacing: 5
     property real headerButtonPadding: 5
@@ -26,7 +29,7 @@ WidgetPanel {
     readonly property var toggleRowKeys: toggleRows.map((row, index) => index)
 
     function openControlCenter() {
-        WidgetState.quickSettingsOpen = false;
+        WidgetState.closeAllPopups();
         ControlCenterService.open();
     }
 
@@ -293,109 +296,131 @@ WidgetPanel {
         }
     }
 
-    ColumnLayout {
+    SidebarFlickable {
+        id: sidebarScroll
         Layout.fillWidth: true
         Layout.fillHeight: true
-        spacing: root.contentSpacing
+        contentWidth: width
+        contentHeight: pageContent.implicitHeight + sidebarScroll.contentTopInset
 
-        QuickSliders {
-            screen: root.screen
-            Layout.fillWidth: true
-        }
+        ColumnLayout {
+            id: pageContent
+            y: sidebarScroll.contentTopInset
+            width: parent.width
+            spacing: root.contentSpacing
 
-        Rectangle {
-            id: togglePanel
+            QuickSliders {
+                Layout.topMargin: sidebarScroll.gapFor(0, 1)
 
-            Layout.fillWidth: true
-            Layout.preferredHeight: toggleContent.implicitHeight + root.togglePadding * 2
-            radius: Appearance.rounding.large
-            color: Appearance.colors.colLayer1
-
-            readonly property real baseCellWidth: {
-                const availableWidth = width - root.togglePadding * 2 - root.toggleSpacing
-                      * root.toggleColumns;
-                return Math.max(root.baseCellHeight, availableWidth / root.toggleColumns);
+                detailed: true
+                pullExpansion: sidebarScroll.detailExpansion
+                screen: root.screen
+                Layout.fillWidth: true
             }
 
-            Behavior on Layout.preferredHeight {
-                NumberAnimation {
-                    duration: Appearance.animation.expressiveDefaultSpatial.duration
-                    easing.type: Appearance.animation.expressiveDefaultSpatial.type
-                    easing.bezierCurve: Appearance.animation.expressiveDefaultSpatial.bezierCurve
-                }
-            }
+            Rectangle {
+                id: togglePanel
+                Layout.topMargin: sidebarScroll.gapFor(1, 1)
 
-            Column {
-                id: toggleContent
+                Layout.fillWidth: true
+                Layout.preferredHeight: toggleContent.implicitHeight + root.togglePadding * 2
+                radius: Appearance.rounding.large
+                color: Appearance.colors.colLayer1
 
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    top: parent.top
-                    margins: root.togglePadding
+                readonly property real baseCellWidth: {
+                    const availableWidth = width - root.togglePadding * 2 - root.toggleSpacing * (
+                              root.toggleColumns - 1);
+                    // Fill all available columns while preserving the rounded-square proportions.
+                    return Math.max(root.baseCellHeight, Math.min(root.baseCellHeight * 1.25, availableWidth
+                                                                  / root.toggleColumns));
                 }
-                spacing: root.toggleSpacing
+
+                Behavior on Layout.preferredHeight {
+                    enabled: sidebarScroll.pullOffset === 0
+                    NumberAnimation {
+                        duration: Appearance.animation.expressiveDefaultSpatial.duration
+                        easing.type: Appearance.animation.expressiveDefaultSpatial.type
+                        easing.bezierCurve: Appearance.animation.expressiveDefaultSpatial.bezierCurve
+                    }
+                }
 
                 Column {
-                    id: usedRows
+                    id: toggleContent
 
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        top: parent.top
+                        margins: root.togglePadding
+                    }
                     spacing: root.toggleSpacing
 
-                    Repeater {
-                        model: ScriptModel {
-                            values: root.toggleRowKeys
-                        }
+                    Column {
+                        id: usedRows
+                        width: parent.width
 
-                        QuickToggleGroup {
-                            id: toggleRow
+                        spacing: root.toggleSpacing + sidebarScroll.sectionExpansion
 
-                            required property int modelData
-                            readonly property var rowData: root.toggleRows[modelData] || []
+                        Repeater {
+                            model: ScriptModel {
+                                values: root.toggleRowKeys
+                            }
 
-                            spacing: root.toggleSpacing
+                            QuickToggleGroup {
+                                id: toggleRow
+                                anchors.horizontalCenter: parent.horizontalCenter
 
-                            Repeater {
-                                model: ScriptModel {
-                                    values: toggleRow.rowData
-                                    objectProp: "type"
-                                }
+                                required property int modelData
+                                readonly property var rowData: root.toggleRows[modelData] || []
 
-                                QuickToggleButton {
-                                    required property var modelData
+                                spacing: root.toggleSpacing
 
-                                    readonly property string toggleType: modelData.type
-                                    readonly property int toggleSize: root.sizeForToggle(modelData)
-
-                                    title: root.titleForType(toggleType)
-                                    subtitle: root.subtitleForType(toggleType)
-                                    iconName: root.iconForType(toggleType)
-                                    toggled: root.toggledForType(toggleType)
-                                    available: root.availableForType(toggleType)
-                                    expanded: toggleSize === 2
-                                    editMode: root.editMode
-                                    hasAltAction: root.hasAltActionForType(toggleType)
-                                    baseCellWidth: togglePanel.baseCellWidth
-                                    baseCellHeight: root.baseCellHeight
-                                    cellSpacing: root.toggleSpacing
-                                    cellSize: toggleSize
-                                    tooltipText: root.tooltipForType(toggleType)
-
-                                    onTriggered: {
-                                        if (!root.editMode)
-                                            root.triggerType(toggleType);
+                                Repeater {
+                                    model: ScriptModel {
+                                        values: toggleRow.rowData
+                                        objectProp: "type"
                                     }
 
-                                    onAltTriggered: {
-                                        if (root.editMode)
-                                            QuickToggleConfig.toggleSize(toggleType);
-                                        else
-                                            root.altType(toggleType);
-                                    }
+                                    QuickToggleButton {
+                                        required property var modelData
+                                        required property int index
+                                        Layout.alignment: Qt.AlignTop
+                                        Layout.topMargin: sidebarScroll.detailExpansion * (index + 1)
 
-                                    onWheelMoved: delta => {
-                                        if (!root.editMode)
-                                            return;
-                                        QuickToggleConfig.move(toggleType, delta < 0 ? 1 : -1);
+                                        readonly property string toggleType: modelData.type
+                                        readonly property int toggleSize: root.sizeForToggle(modelData)
+
+                                        title: root.titleForType(toggleType)
+                                        subtitle: root.subtitleForType(toggleType)
+                                        iconName: root.iconForType(toggleType)
+                                        toggled: root.toggledForType(toggleType)
+                                        available: root.availableForType(toggleType)
+                                        expanded: toggleSize === 2
+                                        editMode: root.editMode
+                                        hasAltAction: root.hasAltActionForType(toggleType)
+                                        baseCellWidth: togglePanel.baseCellWidth
+                                        baseCellHeight: root.baseCellHeight
+                                        cellSpacing: root.toggleSpacing
+                                        cellSize: toggleSize
+                                        tooltipText: root.tooltipForType(toggleType)
+
+                                        onTriggered: {
+                                            if (!root.editMode)
+                                                root.triggerType(toggleType);
+                                        }
+
+                                        onAltTriggered: {
+                                            if (root.editMode)
+                                                QuickToggleConfig.toggleSize(toggleType);
+                                            else
+                                                root.altType(toggleType);
+                                        }
+
+                                        onWheelMoved: delta => {
+                                            if (!root.editMode)
+                                                return;
+                                            QuickToggleConfig.move(toggleType, delta < 0 ? 1 : -1);
+                                        }
                                     }
                                 }
                             }
@@ -403,10 +428,52 @@ WidgetPanel {
                     }
                 }
             }
-        }
 
-        Item {
-            Layout.fillHeight: true
+            SettingsSection {
+                pullExpansion: sidebarScroll.detailExpansion
+                Layout.topMargin: sidebarScroll.gapFor(2, 1)
+
+                Layout.fillWidth: true
+                title: qsTr("Device settings")
+
+                Repeater {
+                    model: ["network", "bluetooth", "audio", "mic", "caffeine", "night"]
+
+                    SettingsRow {
+                        required property string modelData
+                        Layout.fillWidth: true
+                        Layout.minimumHeight: 64
+                        title: modelData === "caffeine" ? qsTr("Idle management") : root.titleForType(
+                                                              modelData)
+                        iconName: root.iconForType(modelData)
+                        supportingText: {
+                            switch (modelData) {
+                            case "network":
+                                return NetworkService.connected ? NetworkService.activeConnection : "";
+                            case "bluetooth":
+                                return BluetoothService.connectedName;
+                            case "audio":
+                                return Volume.sinkName;
+                            case "mic":
+                                return Volume.sourceName;
+                            case "night":
+                                return DisplayColor.preferences.nightEnabled ? qsTr("%1 K").arg(
+                                                                                   DisplayColor.schedule.temperature) :
+                                                                               "";
+                            default:
+                                return "";
+                            }
+                        }
+                        interactive: true
+                        onClicked: root.altType(modelData)
+                        trailing: MaterialSymbol {
+                            text: "chevron_right"
+                            iconSize: Metrics.iconM
+                            color: Appearance.colors.colOnSurfaceVariant
+                        }
+                    }
+                }
+            }
         }
     }
 }

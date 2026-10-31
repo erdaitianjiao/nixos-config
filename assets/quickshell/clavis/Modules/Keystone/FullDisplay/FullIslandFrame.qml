@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Qt5Compat.GraphicalEffects
+import Quickshell
 import qs.Common
 import qs.Services
 
@@ -15,20 +16,23 @@ Item {
     required property real targetHeight
     required property Item childItem
     required property Item cutoutItem
+    property bool attached: false
     property bool cutoutVisible: false
     property color surfaceColor: Appearance.colors.colLayer0
     readonly property bool horizontal: edge === "top" || edge === "bottom"
     readonly property real length: mainBar.contentLength
+    readonly property real screenMargin: attached ? 0 : PersonalizationConfig.keystoneEdgeSpacing
     readonly property real availableChildWidth: Math.max(24, screen.width - (horizontal ? 32 : thickness + gap
+                                                                                          + screenMargin
                                                                                           + 24))
-    readonly property real availableChildHeight: Math.max(24, screen.height - (horizontal ? thickness + gap + 24 :
-                                                                                            32))
-    readonly property real thickness: 42
-    readonly property real gap: 24
+    readonly property real availableChildHeight: Math.max(24, screen.height - (horizontal ? thickness + gap + screenMargin
+                                                                                            + 24 : 32))
+    readonly property real thickness: PersonalizationConfig.keystoneThickness
+    readonly property real gap: PersonalizationConfig.keystonePopupGap
     // Match the collapsed Pill surface. Only the child deforms; the status
     // bar and its clock remain fixed throughout the split and fusion.
-    readonly property real pillWidth: horizontal ? 220 : 42
-    readonly property real pillHeight: horizontal ? 42 : 220
+    readonly property real pillWidth: horizontal ? PersonalizationConfig.keystoneCompactLength : thickness
+    readonly property real pillHeight: horizontal ? thickness : PersonalizationConfig.keystoneCompactLength
     property real progress: 0
     property bool componentReady: false
     // Capture the visible pose when changing direction. Closing uses a single
@@ -68,8 +72,10 @@ Item {
     readonly property real childHeight: pillHeight + (heldHeight - pillHeight) * (horizontal ? inwardGrowth :
                                                                                                alongGrowth)
     readonly property real childOffset: (thickness + gap) * travel
-    readonly property real childRadius: Math.min(childWidth / 2, childHeight / 2, 21 + 3 * Math.min(1,
-                                                                                                    inwardGrowth))
+    readonly property real childRadius: Math.min(childWidth / 2, childHeight / 2, thickness / 2 + (24
+                                                                                                   - thickness
+                                                                                                   / 2) * Math.min(
+                                                     1, inwardGrowth))
     readonly property real contentOpacity: closing ? legPose.opacity * closingRemaining : stage(0.12, 0.50) + (
                                                          legPose.opacity - smoothStep((legStart - 0.12)
                                                                                       / 0.38))
@@ -89,7 +95,14 @@ Item {
     readonly property bool mainHovered: mainBar.hovered
     readonly property alias childBlurItem: childBlur
     readonly property alias cutoutBlurItem: cutoutBlur
-    readonly property var blurItems: [mainBar, childBlur, neckBlur]
+    readonly property var blurItems: [mainBar, attachedCap, childBlur, neckBlur].concat(edgeStrips.instances)
+    readonly property alias mainInputRegion: mainRegion
+    readonly property vector2d inwardDirection: edge === "top" ? Qt.vector2d(0, 1) : edge === "bottom" ? Qt.vector2d(0,
+                                                                                                                     -1) : edge
+                                                                                                         === "left"
+                                                                                                         ? Qt.vector2d(
+                                                                                                               1, 0) : Qt.vector2d(
+                                                                                                               -1, 0)
 
     signal clockClicked(int button)
     signal mediaRequested
@@ -187,7 +200,7 @@ Item {
         }
     }
 
-    LongStatusBar {
+    FullStatusBar {
         id: mainBar
         screen: root.screen
         edge: root.edge
@@ -199,6 +212,59 @@ Item {
         onClockClicked: button => root.clockClicked(button)
         onMediaRequested: root.mediaRequested()
         z: 2
+    }
+
+    Item {
+        id: attachedCap
+        visible: root.attached
+        x: mainBar.x + (root.edge === "right" ? root.thickness / 2 : 0)
+        y: mainBar.y + (root.edge === "bottom" ? root.thickness / 2 : 0)
+        width: root.horizontal ? mainBar.width : root.thickness / 2
+        height: root.horizontal ? root.thickness / 2 : mainBar.height
+        property real radius: 0
+    }
+
+    // The attached shoulders extend 8 px along the edge and 14 px inward.
+    // Rasterize only these static shoulders for matching input and blur regions.
+    Variants {
+        id: edgeStrips
+        model: root.attached ? Array.from({
+                                              length: 14
+                                          }, (_, i) => i) : []
+        Item {
+            required property int modelData
+            parent: root
+            readonly property real extension: 8 * (1 - Math.sqrt(1 - Math.pow(1 - (modelData + 0.5) / 14, 2)))
+            x: mainBar.x + (root.horizontal ? -extension : root.edge === "left" ? modelData : root.thickness
+                                                                                  - modelData - 1)
+            y: mainBar.y + (!root.horizontal ? -extension : root.edge === "top" ? modelData : root.thickness
+                                                                                  - modelData - 1)
+            width: root.horizontal ? mainBar.width + 2 * extension : 1
+            height: root.horizontal ? 1 : mainBar.height + 2 * extension
+            property real radius: 0
+        }
+    }
+
+    Region {
+        id: mainRegion
+        regions: [barRegion, capRegion].concat(edgeRegions.instances)
+    }
+    Region {
+        id: barRegion
+        item: mainBar
+        radius: root.thickness / 2
+    }
+    Region {
+        id: capRegion
+        item: root.attached ? attachedCap : null
+    }
+    Variants {
+        id: edgeRegions
+        model: edgeStrips.instances
+        Region {
+            required property var modelData
+            item: modelData
+        }
     }
 
     Item {
@@ -276,6 +342,8 @@ Item {
                                                   + mainBar.height / 2 + 24)
         property vector2d mainSize: Qt.vector2d(mainBar.width, mainBar.height)
         property real mainRadius: root.thickness / 2
+        property real attached: root.attached ? 1 : 0
+        property vector2d inwardDirection: root.inwardDirection
         property vector2d satelliteCenter: Qt.vector2d(root.childItem.x + root.childWidth / 2 + 24,
                                                        root.childItem.y + root.childHeight / 2 + 24)
         property vector2d satelliteSize: Qt.vector2d(root.childWidth, root.childHeight)
@@ -285,6 +353,6 @@ Item {
         property vector4d cutoutRect: Qt.vector4d(cutoutBlur.x + 24, cutoutBlur.y + 24, cutoutBlur.visible
                                                   ? cutoutBlur.width : 0, cutoutBlur.height)
         property real cutoutRadius: cutoutBlur.radius
-        fragmentShader: Paths.fileUrl(Paths.assetsDir + "/shaders/keystone/qsb/long_split.frag.qsb")
+        fragmentShader: Paths.fileUrl(Paths.assetsDir + "/shaders/keystone/qsb/full_split.frag.qsb")
     }
 }

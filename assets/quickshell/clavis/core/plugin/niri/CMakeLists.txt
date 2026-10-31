@@ -9,6 +9,8 @@ qt_add_qml_module(ClavisNiri
     SOURCES
         src/niri_plugin.h
         src/niri_plugin.cpp
+        src/niri_floating_parallax.h
+        src/niri_floating_parallax.cpp
         src/niri_animation_targets.h
         src/niri_animation_targets.cpp
     OUTPUT_DIRECTORY ${CLAVIS_QML_BUILD_DIR}/Clavis/Niri

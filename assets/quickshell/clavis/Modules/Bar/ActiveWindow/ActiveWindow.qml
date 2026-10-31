@@ -41,30 +41,32 @@ TopBarPill {
         return Array.from(root.limitedVerticalTitle(value)).join("\n");
     }
 
-    implicitHeight: vertical ? layout.implicitHeight + 16 : Sizes.barPillThickness
-    implicitWidth: vertical ? Sizes.barVisualThickness : layout.implicitWidth + 24
+    implicitHeight: vertical ? layout.implicitHeight + 2 * root.pillPadding : root.pillThickness
+    implicitWidth: vertical ? root.pillThickness : layout.implicitWidth + 2 * root.pillPadding
 
     GridLayout {
         id: layout
 
         anchors.centerIn: parent
         columns: root.vertical ? 1 : 2
-        rowSpacing: root.vertical ? 6 : 0
-        columnSpacing: root.vertical ? 0 : 10
+        rowSpacing: Sizes.barLabelSpacing
+        columnSpacing: Sizes.barLabelSpacing
 
         Item {
-            Layout.preferredWidth: 18
-            Layout.preferredHeight: 18
+            Layout.preferredWidth: Sizes.barControlCircleSize
+            Layout.preferredHeight: Sizes.barControlCircleSize
             Layout.alignment: Qt.AlignCenter
             visible: root.vertical || root.isDesktop || root.activeIcon !== "" || root.activeAppName !== ""
 
             Image {
                 id: appIcon
 
-                anchors.fill: parent
+                anchors.centerIn: parent
+                width: Sizes.barIconSize
+                height: Sizes.barIconSize
                 source: root.activeIcon
-                sourceSize.width: 36
-                sourceSize.height: 36
+                sourceSize.width: Sizes.barIconSize * 2
+                sourceSize.height: Sizes.barIconSize * 2
                 fillMode: Image.PreserveAspectFit
                 asynchronous: true
                 smooth: true
@@ -74,7 +76,7 @@ TopBarPill {
             MaterialSymbol {
                 anchors.fill: parent
                 text: "desktop_windows"
-                iconSize: 18
+                iconSize: Sizes.barIconSize
                 color: Appearance.colors.colPrimary
                 visible: root.isDesktop
             }

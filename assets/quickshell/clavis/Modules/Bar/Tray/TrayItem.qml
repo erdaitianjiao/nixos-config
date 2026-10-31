@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
+import qs.Common
 import qs.Services
 import qs.Widgets.common
 
@@ -14,10 +15,10 @@ MouseArea {
     property var barVisualItem: null
 
     signal menuOpened(var qsWindow)
-    signal menuClosed()
+    signal menuClosed
 
-    implicitWidth: 20
-    implicitHeight: 20
+    implicitWidth: Sizes.barControlCircleSize
+    implicitHeight: Sizes.barControlCircleSize
     hoverEnabled: true
     cursorShape: Qt.PointingHandCursor
     acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -90,8 +91,8 @@ MouseArea {
 
         source: root.modelData.icon || ""
         anchors.centerIn: parent
-        width: parent.width
-        height: parent.height
+        width: Sizes.barIconSize
+        height: Sizes.barIconSize
         asynchronous: true
         mipmap: true
     }

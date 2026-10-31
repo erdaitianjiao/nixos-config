@@ -31,6 +31,7 @@ QtObject {
     readonly property real dividerWidth: 1
     readonly property real sidebarWidthCompact: 420
     readonly property real sidebarWidthComfortable: 540
+    readonly property real hotCornerSize: 8
     readonly property real barHeight: 44
     readonly property real avatarS: 32
     readonly property real avatarM: 48

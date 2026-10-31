@@ -1,6 +1,4 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Controls.Material
 import QtQuick.Layouts
 import qs.Common
 import qs.Components
@@ -11,15 +9,7 @@ import qs.Widgets.common
 WidgetPanel {
     id: root
 
-    title: qsTr("Sound")
-    icon: "volume_up"
-    showBackButton: true
-    backAction: () => WidgetState.quickSettingsView = "settings"
-
     property bool foreground: false
-    property bool isActive: foreground && WidgetState.quickSettingsView === "audio"
-    property bool outputDevicesExpanded: false
-    readonly property bool showOutputDevices: root.outputDevicesExpanded
     readonly property string stateMessage: {
         if (Volume.lastError.length > 0)
             return Volume.lastError;
@@ -30,10 +20,10 @@ WidgetPanel {
         return "";
     }
 
-    onIsActiveChanged: {
-        if (!isActive)
-            outputDevicesExpanded = false;
-    }
+    title: qsTr("Sound")
+    icon: "volume_up"
+    showBackButton: true
+    backAction: () => WidgetState.quickSettingsView = "settings"
 
     headerTools: IconButton {
         controlSize: 40
@@ -43,180 +33,140 @@ WidgetPanel {
         accessibleName: qsTr("Open advanced sound settings")
         hoverStateLayerColor: Appearance.colors.colLayer2Hover
         pressedStateLayerColor: Appearance.colors.colLayer2Active
-        onClicked: Volume.openMixer()
+        onClicked: {
+            WidgetState.closeAllPopups();
+            Volume.openMixer();
+        }
     }
 
     ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        spacing: Appearance.spacing.small
+        spacing: Metrics.spacingL
 
-        ProgressBar {
-            Layout.fillWidth: true
-            Layout.preferredHeight: Volume.ready ? 0 : 4
-            opacity: Volume.ready ? 0 : 1
-            indeterminate: true
-            Material.accent: Appearance.colors.colPrimary
-
-            Behavior on Layout.preferredHeight {
-                ElementMoveAnimation {}
-            }
-            Behavior on opacity {
-                ElementMoveAnimation {}
-            }
-        }
-
-        InlineStatusBanner {
-            Layout.fillWidth: true
-            visible: root.stateMessage.length > 0
-            tone: Volume.lastError.length > 0 ? "error" : "info"
-            iconName: !Volume.ready ? "hourglass_top" : Volume.lastError.length > 0 ? "error" : "info"
-            message: root.stateMessage
-        }
-
-        StyledFlickable {
+        SidebarFlickable {
+            id: sidebarScroll
             Layout.fillWidth: true
             Layout.fillHeight: true
             contentWidth: width
-            contentHeight: audioContent.implicitHeight
+            contentHeight: content.implicitHeight + sidebarScroll.contentTopInset
 
             ColumnLayout {
-                id: audioContent
-
-                width: parent.width - Appearance.spacing.small
-                spacing: Appearance.spacing.small
+                id: content
+                y: sidebarScroll.contentTopInset
+                width: parent.width
+                spacing: Metrics.spacingL
+                InlineStatusBanner {
+                    Layout.topMargin: sidebarScroll.gapFor(0, 1)
+                    Layout.fillWidth: true
+                    visible: root.stateMessage.length > 0
+                    tone: Volume.lastError.length > 0 ? "error" : "info"
+                    message: root.stateMessage
+                }
 
                 SettingsSection {
+                    pullExpansion: sidebarScroll.detailExpansion
+                    Layout.topMargin: sidebarScroll.gapFor(1, 1)
+
                     Layout.fillWidth: true
-                    visible: Volume.ready && (Volume.outputDevices.length > 0 || Volume.outputAvailable)
+                    visible: Volume.ready && Volume.outputAvailable
                     title: qsTr("Output")
+                    iconName: "volume_up"
 
                     VolumeSlider {
                         Layout.fillWidth: true
-                        visible: Volume.outputAvailable
                         title: Volume.sinkName || qsTr("Default output")
+                        supportingText: Volume.nodeSupportingText(Volume.sink)
                         iconName: Volume.nodeIconName(Volume.sink)
                         volume: Volume.sinkVolume
                         muted: Volume.sinkMuted
                         available: Volume.outputAvailable
-                        showMuteButton: false
+                        showMuteButton: true
                         onVolumeMoved: value => Volume.setSinkVolume(value)
+                        onMuteRequested: Volume.toggleSinkMute()
                     }
+                }
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Layout.minimumHeight: 40
-                        visible: Volume.outputDevices.length > 1 || !Volume.outputAvailable
+                SettingsSection {
+                    pullExpansion: sidebarScroll.detailExpansion
+                    Layout.topMargin: sidebarScroll.gapFor(2, 1)
 
-                        Text {
+                    Layout.fillWidth: true
+                    visible: Volume.ready && Volume.outputDevices.length > 0
+                    title: qsTr("Output devices")
+                    iconName: "speaker_group"
+                    contentSpacing: Metrics.spacingL
+
+                    Repeater {
+                        model: Volume.outputDevices
+
+                        ColumnLayout {
+                            id: device
+                            required property var modelData
+                            required property int index
+                            Layout.topMargin: sidebarScroll.gapFor(index, 0.16)
+
                             Layout.fillWidth: true
-                            text: qsTr("Output devices")
-                            color: Appearance.colors.colOnLayer1
-                            font.family: Fonts.ui
-                            font.pixelSize: 12
-                            font.weight: Font.Medium
-                        }
+                            spacing: Metrics.spacingXS + sidebarScroll.detailExpansion
 
-                        IconButton {
-                            selected: root.outputDevicesExpanded
-                            iconName: "expand_more"
-                            iconSize: 22
-                            iconColor: Appearance.colors.colOnLayer2
-                            selectedIconColor: Appearance.colors.colOnSecondaryContainer
-                            selectedContainerColor: Appearance.colors.colSecondaryContainer
-                            selectedHoverStateLayerColor: Appearance.colors.colSecondaryContainerHover
-                            selectedPressedStateLayerColor: Appearance.colors.colSecondaryContainerActive
-                            iconRotation: root.outputDevicesExpanded ? 180 : 0
-                            accessibleName: root.outputDevicesExpanded ? qsTr("Collapse output devices") :
-                                                                         qsTr("Expand output devices")
-                            hoverStateLayerColor: Appearance.colors.colLayer2Hover
-                            pressedStateLayerColor: Appearance.colors.colLayer2Active
-                            onClicked: root.outputDevicesExpanded = !root.outputDevicesExpanded
-
-                            Behavior on iconRotation {
-                                ElementMoveAnimation {}
+                            SettingsRow {
+                                Layout.fillWidth: true
+                                title: Volume.nodeDisplayName(device.modelData)
+                                supportingText: Volume.nodeSupportingText(device.modelData)
+                                iconName: Volume.nodeIconName(device.modelData)
+                                highlighted: Volume.isDefaultOutput(device.modelData)
+                                interactive: !highlighted
+                                onClicked: Volume.setDefaultOutput(device.modelData)
+                                trailing: MaterialSymbol {
+                                    visible: Volume.isDefaultOutput(device.modelData)
+                                    text: "check_circle"
+                                    iconSize: Metrics.iconM
+                                    color: Appearance.colors.colPrimary
+                                }
                             }
-                        }
-                    }
 
-                    Item {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.showOutputDevices ? outputDeviceList.targetHeight : 0
-                        opacity: root.showOutputDevices ? 1 : 0
-                        clip: true
-
-                        Behavior on Layout.preferredHeight {
-                            ElementMoveAnimation {}
-                        }
-                        Behavior on opacity {
-                            ElementMoveAnimation {}
-                        }
-
-                        StyledListView {
-                            id: outputDeviceList
-
-                            readonly property real baseContentHeight: count * 56 + Math.max(0, count - 1)
-                                                                      * spacing
-                            readonly property real targetHeight: Math.min(Sizes.sidebarScrollableListMaxHeight,
-                                                                          Math.max(baseContentHeight,
-                                                                                   contentHeight))
-
-                            anchors.fill: parent
-                            spacing: Appearance.spacing.xSmall
-                            clip: true
-                            boundsBehavior: Flickable.StopAtBounds
-                            interactive: root.showOutputDevices && contentHeight > height
-                            model: Volume.outputDevices
-
-                            delegate: SettingsRow {
-                                required property var modelData
-
-                                width: ListView.view.width
-                                iconName: Volume.nodeIconName(modelData)
-                                title: Volume.nodeDisplayName(modelData)
-                                interactive: !Volume.isDefaultOutput(modelData)
-                                highlighted: Volume.isDefaultOutput(modelData)
-                                onClicked: Volume.setDefaultOutput(modelData)
+                            VolumeSlider {
+                                Layout.fillWidth: true
+                                visible: !Volume.isDefaultOutput(device.modelData)
+                                title: qsTr("Volume")
+                                iconName: Volume.nodeIconName(device.modelData)
+                                volume: Volume.nodeVolume(device.modelData)
+                                muted: Volume.nodeMuted(device.modelData)
+                                showMuteButton: true
+                                onVolumeMoved: value => Volume.setNodeVolume(device.modelData, value)
+                                onMuteRequested: Volume.toggleNodeMute(device.modelData)
                             }
                         }
                     }
                 }
 
                 SettingsSection {
+                    pullExpansion: sidebarScroll.detailExpansion
+                    Layout.topMargin: sidebarScroll.gapFor(3, 1)
+
                     Layout.fillWidth: true
                     visible: Volume.ready && Volume.outputAvailable
                     title: qsTr("Application volume")
+                    iconName: "apps"
+                    contentSpacing: Metrics.spacingL
 
-                    StyledListView {
-                        id: playbackStreamList
-
-                        readonly property real baseContentHeight: count * 48 + Math.max(0, count - 1)
-                                                                  * spacing
-
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: Math.min(Sizes.sidebarScrollableListMaxHeight, Math.max(
-                                                             baseContentHeight, contentHeight))
-                        visible: count > 0
-                        spacing: Appearance.spacing.xSmall
-                        clip: true
-                        boundsBehavior: Flickable.StopAtBounds
-                        interactive: contentHeight > height
+                    Repeater {
                         model: Volume.playbackStreams
 
-                        delegate: ApplicationVolumeRow {
+                        VolumeSlider {
                             required property var modelData
+                            required property int index
+                            Layout.topMargin: sidebarScroll.gapFor(index, 0.16)
 
-                            width: ListView.view.width
+                            Layout.fillWidth: true
                             title: Volume.applicationDisplayName(modelData)
+                            supportingText: Volume.nodeSupportingText(modelData)
                             iconSource: Volume.applicationIconSource(modelData)
                             volume: Volume.nodeVolume(modelData)
                             muted: Volume.nodeMuted(modelData)
+                            showMuteButton: true
                             onVolumeMoved: value => Volume.setNodeVolume(modelData, value)
                             onMuteRequested: Volume.toggleNodeMute(modelData)
-                        }
-
-                        Behavior on Layout.preferredHeight {
-                            ElementMoveAnimation {}
                         }
                     }
 
@@ -226,11 +176,6 @@ WidgetPanel {
                         iconName: "music_off"
                         title: qsTr("No active application audio")
                     }
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: Appearance.spacing.small
                 }
             }
         }

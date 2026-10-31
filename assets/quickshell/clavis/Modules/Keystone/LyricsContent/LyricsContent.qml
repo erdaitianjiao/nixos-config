@@ -6,12 +6,10 @@ Item {
     id: root
 
     required property var player
-    property bool active: false
     property bool vertical: false
     property string edge: "top"
     readonly property var lyricsModel: Lyrics.lyrics
     readonly property string artUrl: player ? player.trackArtUrl || "" : ""
-    readonly property string spectrumToken: "keystone-lyrics-" + String(root)
     readonly property int currentLineIndex: {
         const lines = Lyrics.lyrics;
         if (!root.player || !Lyrics.hasSynchronizedLyrics || !lines || lines.length === 0)
@@ -32,18 +30,6 @@ Item {
 
     implicitWidth: presenter.item ? presenter.item.implicitWidth : 0
     implicitHeight: presenter.item ? presenter.item.implicitHeight : 0
-    Component.onCompleted: {
-        if (active)
-            AudioSpectrum.acquire(spectrumToken);
-    }
-    Component.onDestruction: AudioSpectrum.release(spectrumToken)
-    onActiveChanged: {
-        if (active)
-            AudioSpectrum.acquire(spectrumToken);
-        else
-            AudioSpectrum.release(spectrumToken);
-    }
-
     Loader {
         id: presenter
 
@@ -58,7 +44,7 @@ Item {
             lyricsModel: root.lyricsModel
             currentLineIndex: root.currentLineIndex
             artUrl: root.artUrl
-            active: root.active
+            player: root.player
             status: Lyrics.status
             errorText: Lyrics.error
         }
@@ -70,7 +56,7 @@ Item {
         VerticalLyricsLayout {
             lyric: root.currentLyric
             artUrl: root.artUrl
-            active: root.active
+            player: root.player
             edge: root.edge
             status: Lyrics.status
             errorText: Lyrics.error

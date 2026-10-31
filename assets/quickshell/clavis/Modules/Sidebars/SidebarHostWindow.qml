@@ -13,6 +13,7 @@ PanelWindow {
     id: root
 
     property string lastOpenedSidebar: "dashboard"
+    property string openingScreenName: ""
     readonly property bool sameEdge: PersonalizationConfig.sidebarPositions.dashboard
                                      === PersonalizationConfig.sidebarPositions.quickSettings
 
@@ -56,11 +57,38 @@ PanelWindow {
     function opened(role) {
         lastOpenedSidebar = role;
         reconcileSidebars();
-        const requested = role === "quicksettings" ? Brightness.getScreenByName(
-                                                         WidgetState.quickSettingsScreenName) : null;
+        const requested = Brightness.getScreenByName(openingScreenName || (role === "quicksettings"
+                                                                           ? WidgetState.quickSettingsScreenName :
+                                                                             ""));
         const nextScreen = requested || Brightness.activeScreen;
         if (nextScreen)
             retainedScreenName = nextScreen.name;
+    }
+
+    function openOnScreen(role, view, screenName) {
+        const views = role === "dashboard" ? ["info", "drawer", "weather"] : role === "quicksettings" ? ["settings",
+                                                                                                         "network",
+                                                                                                         "bluetooth",
+                                                                                                         "audio", "microphone",
+                                                                                                         "idle", "night"] :
+                                                                                                        [];
+        if (views.indexOf(view) < 0)
+            return "INVALID_VIEW";
+        const requestedScreen = Brightness.getScreenByName(screenName);
+        if (!requestedScreen)
+            return "SCREEN_UNAVAILABLE";
+
+        openingScreenName = requestedScreen.name;
+        retainedScreenName = requestedScreen.name;
+        if (role === "dashboard") {
+            WidgetState.dashboardSidebarView = view;
+        } else {
+            WidgetState.quickSettingsScreenName = requestedScreen.name;
+            WidgetState.quickSettingsView = view;
+        }
+        const result = setSidebarOpen(role, true);
+        openingScreenName = "";
+        return result;
     }
 
     readonly property bool anySidebarOpen: WidgetState.dashboardSidebarOpen || WidgetState.quickSettingsOpen
@@ -74,7 +102,6 @@ PanelWindow {
     onScreenChanged: WidgetState.sidebarScreenName = screen ? screen.name : ""
     visible: retainedScreen !== null || fallbackScreen !== null
     color: "transparent"
-    exclusiveZone: 0
 
     anchors {
         left: true
@@ -83,10 +110,17 @@ PanelWindow {
         bottom: true
     }
 
-    WlrLayershell.layer: WlrLayer.Top
+    WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "clavis-shell-sidebars"
-    WlrLayershell.exclusionMode: ExclusionMode.Normal
+    // Reveal from physical screen edges, including the bar/dock reserved area.
+    WlrLayershell.exclusionMode: ExclusionMode.Ignore
     WlrLayershell.keyboardFocus: root.anySidebarOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+    Binding {
+        target: WidgetState
+        property: "sidebarPresentationActive"
+        value: root.anySidebarOpen || dashboardSidebar.panelPresented || quickSettingsSidebar.panelPresented
+    }
 
     IpcHandler {
         target: "sidebar"
@@ -106,6 +140,11 @@ PanelWindow {
 
     mask: Region {
         item: root.anySidebarOpen ? interactionRegion : null
+
+        HotCornerExclusionRegion {
+            surfaceWidth: root.width
+            surfaceHeight: root.height
+        }
     }
 
     Component.onCompleted: {

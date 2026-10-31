@@ -15,47 +15,12 @@ StyledFlickable {
     contentWidth: width
     contentHeight: contentColumn.y + contentColumn.implicitHeight + 24
 
-    readonly property real pageContentWidth: 600
+    readonly property real pageContentWidth: Math.min(600, Math.max(0, width - 48))
 
-    component Section: ColumnLayout {
-        id: section
-
-        property string title: ""
-        property string iconName: "palette"
-        default property alias content: body.data
-
+    component Section: SettingsSection {
         Layout.fillWidth: true
-        spacing: 12
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 8
-
-            MaterialSymbol {
-                Layout.preferredWidth: 30
-                Layout.preferredHeight: 30
-                text: section.iconName
-                iconSize: 26
-                fill: 1
-                color: Appearance.colors.colOnSecondaryContainer
-            }
-
-            Text {
-                Layout.fillWidth: true
-                text: section.title
-                color: Appearance.colors.colOnSecondaryContainer
-                font.family: Fonts.ui
-                font.pixelSize: 18
-                font.weight: Font.Medium
-            }
-        }
-
-        ColumnLayout {
-            id: body
-
-            Layout.fillWidth: true
-            spacing: 10
-        }
+        flat: true
+        contentSpacing: 10
     }
 
     component PreviewSegmentGroup: Item {
@@ -144,6 +109,8 @@ StyledFlickable {
 
         Layout.preferredWidth: 288
         Layout.preferredHeight: 180
+        Layout.fillWidth: true
+        Layout.minimumWidth: 0
         scale: cardMouse.pressed ? 0.985 : 1
 
         Behavior on scale {
@@ -312,7 +279,7 @@ StyledFlickable {
 
             SearchSelectMenuField {
                 closeOnAccept: false
-                Layout.preferredWidth: selectRow.fieldWidth
+                Layout.preferredWidth: Math.min(selectRow.fieldWidth, selectRow.width * 0.55)
                 Layout.preferredHeight: 40
                 Layout.alignment: Qt.AlignVCenter
                 options: selectRow.options
@@ -480,6 +447,38 @@ StyledFlickable {
                 mode: "dark"
                 darkPreview: true
                 onClicked: ThemeService.setThemeMode("dark")
+            }
+        }
+
+        Section {
+            id: windowSection
+            title: windowSearchAnchor.title
+            iconName: "window"
+
+            SettingsSearchAnchor {
+                id: windowSearchAnchor
+                target: windowSection
+                declaration:
+                    '{"id":"theme.section.settings-window","route":"theme","title":"Settings window","context":"ThemePage","icon":"window","aliases":["window controls","traffic lights"]}'
+            }
+
+            SettingsRow {
+                Layout.fillWidth: true
+                title: qsTr("Window controls")
+                trailing: StyledButtonGroup {
+                    model: [
+                        {
+                            value: "left",
+                            label: qsTr("Left")
+                        },
+                        {
+                            value: "right",
+                            label: qsTr("Right")
+                        }
+                    ]
+                    currentValue: PersonalizationConfig.settingsWindowControlsSide
+                    onValueSelected: value => PersonalizationConfig.setSettingsWindowControlsSide(value)
+                }
             }
         }
 

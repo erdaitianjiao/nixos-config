@@ -74,6 +74,10 @@ Singleton {
     }
 
     function options(feature) {
+        if (feature === "hot-corners")
+            return {
+                revision: revision
+            };
         if (feature === "minimize-animation")
             return {
                 effect: minimizeEffect,

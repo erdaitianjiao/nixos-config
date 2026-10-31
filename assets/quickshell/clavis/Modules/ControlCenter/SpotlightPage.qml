@@ -43,7 +43,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Layout")
-                iconName: "grid_view"
 
                 trailing: SearchSelectMenuField {
                     id: appStylePicker
@@ -68,7 +67,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Application order")
-                iconName: "sort"
                 trailing: SearchSelectMenuField {
                     id: appOrderPicker
                     Layout.preferredWidth: 220
@@ -114,7 +112,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Search engine")
-                iconName: "search"
 
                 trailing: SearchSelectMenuField {
                     id: enginePicker
@@ -163,7 +160,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Layout")
-                iconName: "view_sidebar"
                 trailing: SearchSelectMenuField {
                     id: clipboardStylePicker
                     Layout.preferredWidth: 220
@@ -188,7 +184,6 @@ StyledFlickable {
                 Layout.fillWidth: true
                 title: qsTr("History limit")
                 supportingText: qsTr("Oldest items are removed when new content is saved.")
-                iconName: "history"
 
                 trailing: MaterialStepper {
                     from: 50

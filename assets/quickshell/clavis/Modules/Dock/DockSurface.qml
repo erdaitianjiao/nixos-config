@@ -139,18 +139,34 @@ PanelWindow {
                                                       >= dockInputArea.y && surfaceHover.point.position.y
                                                       < dockInputArea.y + dockInputArea.height)
     readonly property bool pointerOverInteractiveArea: {
-        if (!shown)
+        if (!shown || !surfaceHover.hovered)
             return false;
-        if (glassHover.hovered)
+        // Fan tiles can take a delegate's hover while crossing the source icon.
+        // Use the surface pointer and the same geometry as the input regions,
+        // independent of which child currently receives mouse events.
+        const point = surfaceHover.point.position;
+        const x = point.x - band.x;
+        const y = point.y - band.y;
+        if (x >= glass.x && x < glass.x + glass.width && y >= glass.y && y < glass.y + glass.height)
             return true;
+        const iconX = x + (horizontal ? scrollOffset : 0);
+        const iconY = y + (horizontal ? 0 : scrollOffset);
         for (let i = 0; i < iconItems.count; ++i) {
-            const item = iconItems.itemAt(i);
-            if (item && item.enabled && !item.dragged && item.pointerHovered)
+            const item = iconItems.itemAt(i) as DockItem;
+            if (!item || !item.enabled || item.dragged)
+                continue;
+            const area = item.pointerArea;
+            const left = item.x + area.x;
+            const top = item.y + area.y;
+            if (iconX >= left && iconX < left + area.width && iconY >= top && iconY < top + area.height)
                 return true;
         }
         return false;
     }
-    onPointerOverInteractiveAreaChanged: {
+    // Hit testing reads the animated geometry. Do not change that geometry
+    // while its binding is evaluating; coalesce enter/leave in the next turn.
+    onPointerOverInteractiveAreaChanged: Qt.callLater(root.updatePointerInteraction)
+    function updatePointerInteraction() {
         if (pointerOverInteractiveArea) {
             if (!trackingFileDrag)
                 pointerAxis = horizontal ? surfaceHover.point.scenePosition.x :
@@ -802,9 +818,6 @@ PanelWindow {
 
             Rectangle {
                 id: glass
-                HoverHandler {
-                    id: glassHover
-                }
                 x: root.horizontal ? 0 : root.edge === "left" ? 0 : parent.width - width
                 y: root.horizontal ? parent.height - height : 0
                 width: root.horizontal ? parent.width : root.restingThickness

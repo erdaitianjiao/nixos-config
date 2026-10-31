@@ -14,6 +14,26 @@ Singleton {
     property var scenes: ({})
     property var lastFocusedHorizontalColumnByWorkspace: ({})
 
+    function scheduleFloatingParallax() {
+        Qt.callLater(root.publishFloatingParallax);
+    }
+
+    function publishFloatingParallax() {
+        // A live QML reload can still be using the previous native plugin.
+        if (!Niri.connected || typeof Niri.setFloatingParallaxOffsets !== "function")
+            return;
+        const offsets = {};
+        for (let key in root.scenes) {
+            const scene = root.scenes[key];
+            const workspaceId = scene && scene.activeWorkspace ? scene.activeWorkspace.id : 0;
+            if (workspaceId)
+                offsets[String(workspaceId)] = scene.floatingOffsetX;
+        }
+        // Publish targets, never the per-frame wallpaper transform. Niri owns
+        // the window animation and tracks which windows actually moved.
+        Niri.setFloatingParallaxOffsets(offsets);
+    }
+
     function rememberFocusedWindow() {
         const next = WallpaperMath.rememberFocusedHorizontalColumn(root.lastFocusedHorizontalColumnByWorkspace,
                                                                    Niri.focusedWindow);
@@ -52,6 +72,7 @@ Singleton {
             if (scene && typeof scene.refreshNiriState === "function")
                 scene.refreshNiriState();
         }
+        root.scheduleFloatingParallax();
     }
 
     function sceneFor(screenName) {
@@ -69,6 +90,7 @@ Singleton {
         next[key] = scene;
         root.scenes = next;
         scene.refreshNiriState();
+        root.scheduleFloatingParallax();
         return scene;
     }
 
@@ -180,6 +202,17 @@ Singleton {
                                                                                         PersonalizationConfig.parallaxFollowSidebars
                                                                                         && rightEdgeOpen,
                                                                                         sidebarStep)
+            readonly property real floatingOffsetX: PersonalizationConfig.parallaxFloatingWindowsEnabled
+                                                    && screenWidth > 1 && screenHeight > 1 && (
+                                                        manualParallaxActive || panoramaGeometry.active)
+                                                    ? WallpaperMath.floatingParallaxOffset(tiledProgress,
+                                                                                           leftEdgeOpen,
+                                                                                           rightEdgeOpen,
+                                                                                           PersonalizationConfig.parallaxFollowTiledColumns,
+                                                                                           PersonalizationConfig.parallaxFollowSidebars,
+                                                                                           96) : 0
+            onFloatingOffsetXChanged: root.scheduleFloatingParallax()
+            onActiveWorkspaceChanged: root.scheduleFloatingParallax()
             property real panoramaHorizontalProgress: horizontalProgress
             readonly property real verticalProgress: {
                 if (!PersonalizationConfig.parallaxVerticalEnabled ||
@@ -264,6 +297,10 @@ Singleton {
 
     Connections {
         target: Niri
+
+        function onConnectedChanged() {
+            root.refreshAllScenes();
+        }
 
         function onWorkspacesChanged() {
             root.refreshAllScenes();

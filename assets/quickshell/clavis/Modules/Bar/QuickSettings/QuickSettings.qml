@@ -10,17 +10,6 @@ TopBarPill {
     property var screen: null
     property bool vertical: false
 
-    // The network button already animates its width. Follow those frames
-    // directly instead of applying a second, lagging size animation.
-    animateResize: {
-        for (let index = 0; index < componentRepeater.count; ++index) {
-            const loader = componentRepeater.itemAt(index);
-            if (loader && loader.modelData === "network" && loader.item && loader.item.resizing)
-                return false;
-        }
-        return true;
-    }
-
     function componentFor(componentId) {
         switch (componentId) {
         case "network":
@@ -44,16 +33,15 @@ TopBarPill {
         }
     }
 
-    implicitHeight: vertical ? layout.implicitHeight + 16 : Sizes.barPillThickness
-    implicitWidth: vertical ? Sizes.barVisualThickness : layout.implicitWidth + 2
-                              * Sizes.barPillHorizontalPadding
+    implicitHeight: vertical ? layout.implicitHeight + 2 * root.pillPadding : root.pillThickness
+    implicitWidth: vertical ? root.pillThickness : layout.implicitWidth + 2 * root.pillPadding
 
     GridLayout {
         id: layout
 
         anchors.centerIn: parent
-        rowSpacing: 8
-        columnSpacing: 8
+        rowSpacing: Sizes.barItemSpacing
+        columnSpacing: Sizes.barItemSpacing
         columns: root.vertical ? 1 : 8
 
         Repeater {
@@ -83,6 +71,7 @@ TopBarPill {
         id: bluetoothComponent
 
         BluetoothButton {
+            vertical: root.vertical
             screen: root.screen
         }
     }
@@ -91,6 +80,7 @@ TopBarPill {
         id: brightnessComponent
 
         Brightness {
+            vertical: root.vertical
             screen: root.screen
         }
     }
@@ -99,6 +89,7 @@ TopBarPill {
         id: volumeComponent
 
         Volume {
+            vertical: root.vertical
             screen: root.screen
         }
     }
@@ -107,6 +98,7 @@ TopBarPill {
         id: microphoneComponent
 
         Microphone {
+            vertical: root.vertical
             screen: root.screen
         }
     }

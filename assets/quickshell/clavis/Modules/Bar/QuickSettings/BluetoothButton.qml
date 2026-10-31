@@ -3,7 +3,7 @@ import qs.Common
 import qs.Services
 import qs.Widgets.common
 
-BarCircularButton {
+BarLabelButton {
     id: root
 
     property var screen: null
@@ -14,9 +14,8 @@ BarCircularButton {
                                                                                               "bluetooth_disabled"
     selected: root.active
     enabled: BluetoothService.available
-    containerColor: Appearance.colors.colSecondaryContainer
-    rippleColor: Appearance.colors.colOnSecondaryContainer
-    iconColor: Appearance.colors.colOnSecondaryContainer
+    label: BluetoothService.connectedName || ""
+    showLabel: PersonalizationConfig.barShowNames
     tooltipText: BluetoothService.connected ? (BluetoothService.connectedName || qsTr("Bluetooth connected")) :
                                               BluetoothService.enabled ? qsTr("Bluetooth on") : qsTr(
                                                                              "Bluetooth off")

@@ -3,6 +3,7 @@ import qs.Modules.ControlCenter
 import qs.Modules.FilePicker
 import qs.Common
 import qs.Services
+import qs.Widgets.common
 
 Item {
     id: root
@@ -11,16 +12,8 @@ Item {
 
     property var panelScreen: null
     readonly property bool onLeft: PersonalizationConfig.dashboardSidebarSide === "left"
-    property real sidebarWidth: Math.min(Metrics.sidebarWidthComfortable, Math.max(0, width - gap * 2))
-    property int gap: Math.min(Metrics.pageMargin, Math.max(Metrics.spacingS, Math.min(width, height)
-                                                            * 0.025))
-    readonly property alias blurBackgroundItem: panelSurface
-    // The host window already starts inside layer-shell's usable geometry.
-    readonly property int sidebarY: gap
-    readonly property real closedSlideOffset: (onLeft ? -1 : 1) * (sidebarWidth + gap)
-    readonly property int enterDuration: Animations.durations.sidebarEnter
-    readonly property int exitDuration: Animations.durations.sidebarExit
-    readonly property int panelTargetHeight: Math.max(0, height - sidebarY - gap)
+    property real sidebarWidth: Math.min(Metrics.sidebarWidthComfortable, Math.max(0, width))
+    readonly property alias blurBackgroundItem: revealSurface.blurBackgroundItem
     readonly property bool requestedOpen: WidgetState.dashboardSidebarOpen
     property bool presentationAllowed: true
     property bool panelPresented: false
@@ -32,9 +25,8 @@ Item {
                                          && sidebarContentLoader.item !== null
                                          && sidebarContentLoader.item.readyForPresentation
     // A presented surface is only created after contentReady. It remains
-    // operational during closing so its contents leave with the panel.
+    // operational until the closing reveal has fully covered its contents.
     readonly property bool contentOperational: panelPresented
-    readonly property bool panelVisuallyPresent: panelPresented
     readonly property string activeView: WidgetState.dashboardSidebarView
     readonly property int instantiatedViewCount: sidebarContentLoader.item
                                                  ? sidebarContentLoader.item.instantiatedViewCount : 0
@@ -65,7 +57,8 @@ Item {
         if (requestedOpen)
             return;
 
-        // Hide the already off-screen surface before releasing its layout tree.
+        // Finish hiding the surface before releasing its layout tree.
+        revealSurface.reset();
         panelPresented = false;
         if (!root.keepLoaded)
             contentRetained = false;
@@ -103,92 +96,22 @@ Item {
     }
 
     function containsPoint(hostX, hostY) {
-        const localPosition = sidebarContentFrame.mapFromItem(root, hostX, hostY);
-        return localPosition.x >= 0 && localPosition.x <= sidebarContentFrame.width && localPosition.y >= 0
-                && localPosition.y <= sidebarContentFrame.height;
+        const localPosition = revealSurface.mapFromItem(root, hostX, hostY);
+        return revealSurface.containsVisiblePoint(localPosition.x, localPosition.y);
     }
 
-    Item {
-        id: animController
+    EdgeRevealSurface {
+        id: revealSurface
 
-        property real slideOffset: root.closedSlideOffset
-
-        state: root.presentationOpen ? "open" : "closed"
-
-        states: [
-            State {
-                name: "open"
-
-                PropertyChanges {
-                    target: animController
-                    slideOffset: 0
-                }
-            },
-            State {
-                name: "closed"
-
-                PropertyChanges {
-                    target: animController
-                    slideOffset: root.closedSlideOffset
-                }
-            }
-        ]
-
-        transitions: [
-            Transition {
-                id: openTransition
-                to: "open"
-
-                NumberAnimation {
-                    target: animController
-                    property: "slideOffset"
-                    duration: root.enterDuration
-                    easing.type: Easing.OutBack
-                    easing.overshoot: 0.3
-                }
-            },
-            Transition {
-                id: closeTransition
-                to: "closed"
-
-                SequentialAnimation {
-                    NumberAnimation {
-                        target: animController
-                        property: "slideOffset"
-                        duration: root.exitDuration
-                        easing.type: Easing.InBack
-                        easing.overshoot: 0.18
-                    }
-
-                    ScriptAction {
-                        script: root.finishClosing()
-                    }
-                }
-            }
-        ]
-    }
-
-    Rectangle {
-        id: panelSurface
-
-        visible: root.panelVisuallyPresent
-        x: (root.onLeft ? root.gap : root.width - root.sidebarWidth - root.gap) + animController.slideOffset
-        y: root.sidebarY
+        visible: root.panelPresented
+        x: root.onLeft ? 0 : root.width - root.sidebarWidth
+        y: 0
         width: root.sidebarWidth
-        height: root.panelTargetHeight
-        color: BlurService.backgroundColor(Appearance.colors.colLayer0)
-        radius: Appearance.rounding.large
-    }
-
-    Item {
-        id: sidebarContentFrame
-
-        visible: root.panelVisuallyPresent
-        x: panelSurface.x
-        y: panelSurface.y
-        width: panelSurface.width
-        height: panelSurface.height
-        clip: true
+        height: root.height
+        open: root.presentationOpen
+        onLeft: root.onLeft
+        backgroundColor: BlurService.backgroundColor(Appearance.colors.colLayer0)
+        onClosed: root.finishClosing()
 
         Loader {
             id: sidebarContentLoader
@@ -217,6 +140,7 @@ Item {
             forAvatar = avatar;
             // Capture the output rather than follow subsequent sidebar moves.
             targetScreen = root.panelScreen;
+            WidgetState.closeAllPopups();
             const banner = WallpaperPaletteSession.previewForScreen("banner", "")
                   || PersonalizationConfig.bannerSource || WallpaperService.currentWallpaper;
             openAt(avatar ? picturesDir : WallpaperService.isImagePath(banner) ? WallpaperService.parentFolder(
@@ -246,7 +170,10 @@ Item {
             anchors.fill: parent
             screenName: root.panelScreen ? root.panelScreen.name : ""
             onImageSelectionRequested: forAvatar => profileImagePicker.chooseImage(forAvatar)
-            onBannerColorRequested: bannerColorPicker.showFor("banner", "")
+            onBannerColorRequested: {
+                WidgetState.closeAllPopups();
+                bannerColorPicker.showFor("banner", "");
+            }
             weatherSourceOverride: root.weatherSourceOverride
             foreground: root.contentOperational
             presentationActive: root.contentOperational

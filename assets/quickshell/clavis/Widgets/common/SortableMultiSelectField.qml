@@ -152,13 +152,16 @@ FocusScope {
         const contentPosition = local.x + chipList.contentX;
         let insertionIndex = 0;
         for (let index = 0; index < chipModel.count; index += 1) {
-            const delegateItem = chipList.itemAtIndex(index);
-            if (!delegateItem || delegateItem.placeholder || delegateItem.isDragged)
+            const entry = chipModel.get(index);
+            if (entry.placeholder || (root.dragActive && entry.componentId
+                                      === root.dragCoordinator.componentId))
                 continue;
 
-            if (contentPosition < delegateItem.x + delegateItem.width / 2)
+            const delegateItem = chipList.itemAtIndex(index);
+            if (delegateItem && contentPosition < delegateItem.x + delegateItem.width / 2)
                 return insertionIndex;
 
+            // Offscreen delegates may be unloaded, but still occupy model indices.
             insertionIndex += 1;
         }
         return insertionIndex;
@@ -172,7 +175,7 @@ FocusScope {
     function updateAutoScroll(coordinatorItem, sceneX) {
         const local = chipViewport.mapFromItem(coordinatorItem, sceneX, 0);
         const edgeSize = 44;
-        if (local.x < edgeSize && chipList.contentX > 0)
+        if (local.x < edgeSize && chipList.contentX > chipList.originX)
             root.autoScrollVelocity = -Math.min(8, (edgeSize - local.x) / edgeSize * 8);
         else if (local.x > chipViewport.width - edgeSize && chipList.contentX < root.maxContentX())
             root.autoScrollVelocity = Math.min(8, (local.x - chipViewport.width + edgeSize) / edgeSize * 8);
@@ -189,11 +192,12 @@ FocusScope {
     }
 
     function maxContentX() {
-        return Math.max(0, chipList.contentWidth - chipList.width);
+        return chipList.originX + Math.max(0, chipList.contentWidth - chipList.width);
     }
 
     function clampContentX(value) {
-        return Math.max(0, Math.min(value, root.maxContentX()));
+        // ListView can shift its origin when a drag preview moves model entries.
+        return Math.max(chipList.originX, Math.min(value, root.maxContentX()));
     }
 
     function handleWheel(wheelEvent) {

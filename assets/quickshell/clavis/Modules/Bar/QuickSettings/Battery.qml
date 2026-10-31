@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import Quickshell.Services.UPower
 import qs.Common
 import qs.Components
@@ -18,30 +19,10 @@ Item {
                                        && PowerService.discharging
 
     readonly property string displayText: root.valueAvailable ? String(Math.round(root.percentage)) : "—"
-    readonly property color containerColor: {
-        if (!PowerService.ready || !PowerService.present)
-            return Appearance.colors.colSurfaceContainerHigh;
+    readonly property bool showValue: PersonalizationConfig.barShowValues
+    readonly property color foregroundColor: root.lowBattery ? Appearance.colors.colError :
+                                                               Appearance.colors.colOnSurface
 
-        if (root.lowBattery)
-            return Appearance.colors.colErrorContainer;
-
-        if (PowerService.powerConnected)
-            return Appearance.colors.colPrimaryContainer;
-
-        return Appearance.colors.colSecondaryContainer;
-    }
-    readonly property color foregroundColor: {
-        if (!PowerService.ready || !PowerService.present)
-            return Appearance.colors.colOnSurfaceVariant;
-
-        if (root.lowBattery)
-            return Appearance.colors.colOnErrorContainer;
-
-        if (PowerService.powerConnected)
-            return Appearance.colors.colOnPrimaryContainer;
-
-        return Appearance.colors.colOnSecondaryContainer;
-    }
     readonly property string tooltipText: root.buildTooltip()
 
     function stateAndTimeText() {
@@ -101,46 +82,40 @@ Item {
                                                                                      "Unknown"))].join("\n");
     }
 
-    implicitWidth: root.vertical ? Sizes.barControlCircleSize : 56
-    implicitHeight: root.vertical ? 56 : Sizes.barControlCircleSize
+    implicitWidth: root.vertical ? Math.max(28, batteryContent.implicitWidth) : batteryContent.implicitWidth
+                                   + 8
+    implicitHeight: root.vertical ? Math.max(Sizes.barControlCircleSize, batteryContent.implicitHeight) :
+                                    Sizes.barControlCircleSize
     Accessible.name: root.tooltipText
     Accessible.role: Accessible.StaticText
 
-    Rectangle {
-        anchors.fill: parent
-        radius: Math.min(width, height) / 2
-        color: root.containerColor
-
-        Behavior on color {
-            ColorAnimation {
-                duration: Appearance.animation.expressiveEffects.duration
-            }
-        }
-    }
-
-    Row {
+    GridLayout {
+        id: batteryContent
         anchors.centerIn: parent
-        rotation: root.vertical ? (PersonalizationConfig.barPosition === "right" ? 90 : -90) : 0
-        spacing: 2
-
-        Item {
-            anchors.verticalCenter: parent.verticalCenter
-            width: batteryGlyph.width
-            height: batteryGlyph.height
-
-            BatteryGlyph {
-                id: batteryGlyph
-            }
-        }
-
+        columns: root.vertical ? 1 : 2
+        rowSpacing: 4
+        columnSpacing: Sizes.barLabelSpacing
         MaterialSymbol {
-            anchors.verticalCenter: parent.verticalCenter
-            visible: PowerService.charging
-            width: visible ? 12 : 0
-            height: width
-            text: "bolt"
-            iconSize: width
+            Layout.preferredWidth: Sizes.barControlCircleSize
+            Layout.preferredHeight: Sizes.barControlCircleSize
+            Layout.alignment: Qt.AlignCenter
+            text: !root.valueAvailable ? "battery_android_question" : PowerService.charging
+                                         ? "battery_android_bolt" : root.percentage >= 95
+                                           ? "battery_android_full" : "battery_android_" + Math.max(0,
+                                                                                                    Math.min(6,
+                                                                                                             Math.floor(
+                                                                                                                 root.percentage
+                                                                                                                 * 7 / 100)))
+            iconSize: Sizes.barIconSize
             fill: 1
+            color: root.foregroundColor
+        }
+        Text {
+            Layout.alignment: Qt.AlignCenter
+            visible: root.showValue
+            text: root.valueAvailable ? root.displayText + "%" : root.displayText
+            font.family: Fonts.numeric
+            font.pixelSize: 12
             color: root.foregroundColor
         }
     }
@@ -156,51 +131,5 @@ Item {
     PopupToolTip {
         extraVisibleCondition: hoverArea.containsMouse
         text: root.tooltipText
-    }
-
-    component BatteryGlyph: Item {
-        width: 31
-        height: 16
-
-        Rectangle {
-            id: glyphBody
-
-            radius: 4
-            color: root.valueAvailable ? root.foregroundColor : "transparent"
-            border.width: root.valueAvailable ? 0 : 1
-            border.color: root.foregroundColor
-
-            anchors {
-                left: parent.left
-                top: parent.top
-                bottom: parent.bottom
-                right: glyphTerminal.left
-                rightMargin: 1
-            }
-
-            Text {
-                anchors.centerIn: parent
-                text: root.displayText
-                color: root.valueAvailable ? root.containerColor : root.foregroundColor
-                font.family: Fonts.expressive
-                font.pixelSize: 11
-                font.weight: Font.Bold
-                font.hintingPreference: Font.PreferNoHinting
-            }
-        }
-
-        Rectangle {
-            id: glyphTerminal
-
-            width: 3
-            height: parent.height * 0.5
-            radius: width / 2
-            color: root.foregroundColor
-
-            anchors {
-                right: parent.right
-                verticalCenter: parent.verticalCenter
-            }
-        }
     }
 }

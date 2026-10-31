@@ -90,7 +90,8 @@ PopupWindow {
         screen: root.screen
         color: "transparent"
         exclusiveZone: 0
-        WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.layer: root.anchorItem && root.anchorItem.QsWindow.window
+                             ? root.anchorItem.QsWindow.window.WlrLayershell.layer : WlrLayer.Top
         WlrLayershell.namespace: "clavis-shell-tray-menu-backdrop"
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
 

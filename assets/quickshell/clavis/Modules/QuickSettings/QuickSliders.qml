@@ -9,11 +9,13 @@ Rectangle {
 
     readonly property real gammaCutoff: 0.3
     property var screen: null
+    property bool detailed: false
+    property real pullExpansion: 0
     readonly property var brightnessMonitor: Brightness.getMonitorForScreen(screen)
     readonly property real brightnessValue: brightnessMonitor ? brightnessMonitor.brightness :
                                                                 Brightness.brightnessValue
-    property real verticalPadding: 4
-    property real horizontalPadding: 12
+    property real verticalPadding: detailed ? Metrics.spacingL : 4
+    property real horizontalPadding: detailed ? Metrics.spacingL : 12
 
     Layout.fillWidth: true
     implicitWidth: contentItem.implicitWidth + horizontalPadding * 2
@@ -31,9 +33,16 @@ Rectangle {
             topMargin: root.verticalPadding
             bottomMargin: root.verticalPadding
         }
-        spacing: 0
+        spacing: (root.detailed ? Metrics.spacingS : 0) + root.pullExpansion
+
+        SliderHeading {
+            visible: root.detailed
+            title: qsTr("Brightness")
+            detail: root.screen ? root.screen.name : ""
+        }
 
         QuickMaterialSlider {
+            Accessible.name: qsTr("Brightness")
             materialSymbol: "light_mode"
             secondaryMaterialSymbol: "wb_twilight"
             secondaryIconLocation: root.gammaCutoff
@@ -67,16 +76,61 @@ Rectangle {
             }
         }
 
-        QuickMaterialSlider {
-            materialSymbol: "volume_up"
-            value: Volume.sinkVolume
-            onMoved: Volume.setSinkVolume(value)
+        SliderHeading {
+            visible: root.detailed
+            Layout.topMargin: (root.detailed ? Metrics.spacingS : 0) + root.pullExpansion * 1.5
+            title: qsTr("Sound")
+            detail: Volume.sinkName
         }
 
         QuickMaterialSlider {
-            materialSymbol: "mic"
+            Accessible.name: qsTr("Sound")
+            enabled: Volume.outputAvailable
+            materialSymbol: Volume.sinkMuted ? "volume_off" : "volume_up"
+            value: Volume.sinkVolume
+            percentText: Volume.sinkMuted ? qsTr("Muted") : Math.round(value * 100) + "%"
+            onMoved: Volume.setSinkVolume(value)
+        }
+
+        SliderHeading {
+            visible: root.detailed
+            Layout.topMargin: (root.detailed ? Metrics.spacingS : 0) + root.pullExpansion * 1.5
+            title: qsTr("Microphone")
+            detail: Volume.sourceName
+        }
+
+        QuickMaterialSlider {
+            Accessible.name: qsTr("Microphone")
+            enabled: Volume.inputAvailable
+            materialSymbol: Volume.sourceMuted ? "mic_off" : "mic"
             value: Volume.sourceVolume
+            percentText: Volume.sourceMuted ? qsTr("Muted") : Math.round(value * 100) + "%"
             onMoved: Volume.setSourceVolume(value)
+        }
+    }
+
+    component SliderHeading: ColumnLayout {
+        id: heading
+        property string title: ""
+        property string detail: ""
+        Layout.fillWidth: true
+        spacing: Metrics.spacingXXS + root.pullExpansion * 0.5
+        Text {
+            Layout.fillWidth: true
+            text: heading.title
+            color: Appearance.colors.colOnSurface
+            font.family: Typography.titleSmall.family
+            font.pixelSize: Typography.titleSmall.pixelSize
+            font.weight: Typography.titleSmall.weight
+        }
+        Text {
+            Layout.fillWidth: true
+            text: heading.detail
+            visible: text.length > 0
+            elide: Text.ElideRight
+            color: Appearance.colors.colOnSurfaceVariant
+            font.family: Typography.bodySmall.family
+            font.pixelSize: Typography.bodySmall.pixelSize
         }
     }
 }

@@ -5,6 +5,7 @@ import qs.Components
 
 Item {
     id: root
+    property bool flat: false
 
     property real value: 0
     property string icon: "monitoring"
@@ -16,7 +17,7 @@ Item {
     property bool showText: false
     property bool vertical: false
     property string displayText: ""
-    property real labelSpacing: Appearance.spacing.xSmall
+    property real labelSpacing: Sizes.barLabelSpacing
     property bool animationEnabled: true
     property int animationDuration: Appearance.animation.standardSmall.duration
     readonly property real normalizedValue: {
@@ -49,6 +50,7 @@ Item {
         y: root.vertical ? 0 : (parent.height - height) / 2
 
         Rectangle {
+            visible: !root.flat
             anchors.fill: parent
             radius: width / 2
             color: root.trackColor
@@ -56,7 +58,7 @@ Item {
 
         Shape {
             anchors.fill: parent
-            visible: root.degree > 0.01
+            visible: !root.flat && root.degree > 0.01
             preferredRendererType: Shape.CurveRenderer
             antialiasing: true
 
@@ -90,8 +92,8 @@ Item {
         MaterialSymbol {
             anchors.centerIn: parent
             text: root.icon
-            iconSize: root.iconSize
-            color: root.iconColor
+            iconSize: root.flat ? Sizes.barIconSize : root.iconSize
+            color: root.flat ? Appearance.colors.colOnSurface : root.iconColor
             fill: 1
         }
     }
@@ -124,7 +126,7 @@ Item {
     }
 
     Behavior on degree {
-        enabled: root.animationEnabled
+        enabled: root.animationEnabled && !root.flat
 
         NumberAnimation {
             duration: root.animationDuration

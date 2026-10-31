@@ -4,7 +4,7 @@ import qs.Common
 import qs.Components
 import qs.Services
 import qs.Widgets.common
-import "../../../../Common/functions/SystemFormat.js" as Format
+import "../../../Common/functions/SystemFormat.js" as Format
 
 Item {
     id: root
@@ -50,7 +50,7 @@ Item {
         }
     }
     readonly property string label: {
-        const option = PersonalizationConfig.keystoneLongItemOptions.find(option => option.value
+        const option = PersonalizationConfig.keystoneFullItemOptions.find(option => option.value
                                                                                     === root.itemId);
         return option ? option.label : "";
     }
@@ -239,9 +239,9 @@ Item {
             readonly property real labelExtent: root.nameLabel ? Math.min(Math.max(0, root.maximumNameWidth),
                                                                           statusText.implicitWidth) :
                                                                  statusText.implicitWidth
-            visible: root.displayText !== "" && (root.nameLabel ? PersonalizationConfig.keystoneLongShowNames :
+            visible: root.displayText !== "" && (root.nameLabel ? PersonalizationConfig.keystoneFullShowNames :
                                                                   root.itemId === "weather"
-                                                                  || PersonalizationConfig.keystoneLongShowValues)
+                                                                  || PersonalizationConfig.keystoneFullShowValues)
             implicitWidth: root.rotateLabel ? statusText.implicitHeight : labelExtent
             implicitHeight: root.rotateLabel ? labelExtent : statusText.implicitHeight
             Layout.alignment: Qt.AlignCenter

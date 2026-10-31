@@ -58,8 +58,8 @@ Item {
     readonly property int gridRows: Math.max(1, Math.min(4, Math.ceil((count + 1) / gridColumns)))
     signal dismissed
     width: fan ? fanView.implicitWidth : Math.min(maximumWidth, contextMenu ? 300 : 360)
-    height: fan ? fanView.implicitHeight : list ? Math.min(maximumHeight, (Math.max(1, count) + 1) * 34 + 28
-                                                           + (edge === "bottom" ? 10 : 0)) : contextMenu
+    height: fan ? fanView.implicitHeight : list ? Math.min(480, maximumHeight, (Math.max(1, count) + 1) * 34
+                                                           + 28 + (edge === "bottom" ? 10 : 0)) : contextMenu
                                                   ? Math.min(maximumHeight, menuColumn.height + 26) : Math.min(
                                                         maximumHeight, 20 + (edge === "bottom"
                                                                              ? bubble.tailSize : 0)

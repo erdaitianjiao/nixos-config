@@ -406,7 +406,7 @@ Item {
             }
         }
 
-        StyledFlickable {
+        SidebarFlickable {
             id: dashboardScroll
 
             function scrollBy(delta) {
@@ -421,7 +421,9 @@ Item {
             anchors.fill: parent
             visible: SystemMonitorService.hasData
             contentWidth: width
-            contentHeight: Math.max(height, root.gridContentHeight * dashboard.scale)
+            contentHeight: Math.max(height, root.gridContentHeight * dashboard.scale) + (
+                               dashboardScroll.contentTopInset + Math.ceil(root.gridContentHeight / 180)
+                               * dashboardScroll.sectionExpansion) * dashboard.scale
             onContentHeightChanged: Qt.callLater(dashboardScroll.scrollBy, 0)
             // Keep wheel/touchpad scrolling enabled without letting Flickable
             // take the mouse gesture used to drag a card.
@@ -456,6 +458,48 @@ Item {
                 else
                     return;
                 event.accepted = true;
+            }
+
+            MouseArea {
+                id: backgroundDrag
+                parent: dashboardScroll
+                anchors.fill: parent
+                z: -1
+                acceptedButtons: Qt.LeftButton
+                enabled: dashboardScroll.interactive
+                property real pressY: 0
+                property real initialScroll: 0
+                onPressed: mouse => {
+                    const point = dashboard.mapFromItem(backgroundDrag, mouse.x, mouse.y);
+                    const overCard = root.tileDefinitions.some(definition => {
+                        const placement = root.displayPlacement(definition.id);
+                        const size = root.cardSize(definition.id);
+                        return placement && point.x >= placement.x && point.y >= placement.y && point.x
+                                < placement.x + size.width && point.y < placement.y + size.height;
+                    });
+                    if (overCard) {
+                        mouse.accepted = false;
+                        return;
+                    }
+                    pressY = mouse.y;
+                    initialScroll = dashboardScroll.contentY;
+                    dashboardScroll.cancelFlick();
+                    dashboardScroll.manualDragging = true;
+                }
+                onPositionChanged: mouse => {
+                    if (!pressed)
+                        return;
+                    const position = initialScroll + pressY - mouse.y;
+                    const maximum = Math.max(0, dashboardScroll.contentHeight - dashboardScroll.height);
+                    dashboardScroll.contentY = Math.max(0, Math.min(maximum, position));
+                    dashboardScroll.manualPullDistance = Math.max(0, -position);
+                }
+                function finish() {
+                    dashboardScroll.manualDragging = false;
+                    dashboardScroll.manualPullDistance = 0;
+                }
+                onReleased: finish()
+                onCanceled: finish()
             }
 
             Item {
@@ -530,6 +574,10 @@ Item {
 
                     delegate: DrawerGridTile {
                         id: tile
+                        transform: SidebarStagger {
+                            view: dashboardScroll
+                            order: tile.placement ? Math.floor(tile.placement.y / 180) : 0
+                        }
 
                         required property var modelData
                         readonly property var definition: modelData

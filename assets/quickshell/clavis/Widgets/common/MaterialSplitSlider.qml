@@ -28,18 +28,23 @@ Slider {
     property color dotColorHighlighted: Appearance.colors.colOnPrimary
     property real unsharpenRadius: 2
     property real trackWidth: configuration
-    property real trackRadius: trackWidth >= MaterialSplitSlider.Configuration.XL ? 21
-        : trackWidth >= MaterialSplitSlider.Configuration.L ? 12
-        : trackWidth >= MaterialSplitSlider.Configuration.M ? 9
-        : trackWidth >= MaterialSplitSlider.Configuration.S ? 6
-        : height / 2
-    property real handleHeight: configuration === MaterialSplitSlider.Configuration.Wavy ? 24 : Math.max(33, trackWidth + 9)
+    property real trackRadius: trackWidth >= MaterialSplitSlider.Configuration.XL ? 21 : trackWidth
+                                                                                    >= MaterialSplitSlider.Configuration.L
+                                                                                    ? 12 : trackWidth
+                                                                                      >= MaterialSplitSlider.Configuration.M
+                                                                                      ? 9 : trackWidth
+                                                                                        >= MaterialSplitSlider.Configuration.S
+                                                                                        ? 6 : height / 2
+    property real handleHeight: configuration === MaterialSplitSlider.Configuration.Wavy ? 24 : Math.max(33,
+                                                                                                         trackWidth
+                                                                                                         + 9)
     property real handleWidth: pressed ? handlePressedWidth : handleDefaultWidth
     property real handleMargins: 4
     property real dividerMargins: 2
     property real trackDotSize: 3
     property bool usePercentTooltip: true
-    property string tooltipContent: usePercentTooltip ? `${Math.round(((value - from) / (to - from)) * 100)}%` : `${Math.round(value)}`
+    property string tooltipContent: usePercentTooltip ? `${Math.round(((value - from) / (to - from)) * 100)
+                                                        }%` : `${Math.round(value)}`
     property bool showTooltipOnHover: false
     property bool wavy: configuration === MaterialSplitSlider.Configuration.Wavy
     property bool animateWave: true
@@ -51,6 +56,8 @@ Slider {
 
     from: 0
     to: 1
+    stepSize: 0.01
+    snapMode: Slider.SnapAlways
     implicitHeight: Math.max(trackWidth, handleHeight)
     hoverEnabled: true
     leftPadding: handleMargins
@@ -58,6 +65,7 @@ Slider {
     Layout.fillWidth: true
 
     Behavior on value {
+        enabled: !root.pressed
         SmoothedAnimation {
             velocity: root.valueAnimationVelocity
         }
@@ -107,9 +115,14 @@ Slider {
         implicitHeight: root.trackWidth
 
         property var normalized: root.dividerValues.map(v => (v - root.from) / (root.to - root.from))
-        property var filtered: normalized.filter(v => Math.abs(v - root.visualPosition) * root.effectiveDraggingWidth > root.handleMargins + root.handleWidth / 2 - root.dividerMargins)
-        property var leftValues: [0].concat(filtered.filter(v => v < root.visualPosition)).concat([root.visualPosition])
-        property var rightValues: [root.visualPosition].concat(filtered.filter(v => v > root.visualPosition)).concat([1])
+        property var filtered: normalized.filter(v => Math.abs(v - root.visualPosition)
+                                                      * root.effectiveDraggingWidth > root.handleMargins
+                                                      + root.handleWidth / 2 - root.dividerMargins)
+        property var leftValues: [0].concat(filtered.filter(v => v < root.visualPosition)).concat(
+            [root.visualPosition])
+        property var rightValues: [root.visualPosition].concat(filtered.filter(v => v
+                                                                                    > root.visualPosition)).concat(
+            [1])
         property var leftWidths: leftValues.map((v, i, a) => a[i + 1] - v).slice(0, -1)
         property var rightWidths: rightValues.map((v, i, a) => a[i + 1] - v).slice(0, -1)
 
@@ -122,9 +135,15 @@ Slider {
                 anchors.verticalCenter: background.verticalCenter
                 active: !root.wavy
                 property real leftMargin: index > 0 ? root.dividerMargins : 0
-                property real rightMargin: index < background.leftWidths.length - 1 ? root.dividerMargins : root.handleMargins
-                x: background.leftValues[index] * root.effectiveDraggingWidth + leftMargin + (index > 0 ? root.leftPadding : 0)
-                width: background.leftWidths[index] * root.effectiveDraggingWidth - leftMargin - rightMargin - (index === background.leftWidths.length - 1 ? root.handleWidth / 2 : 0) + (index === 0 ? root.leftPadding : 0)
+                property real rightMargin: index < background.leftWidths.length - 1 ? root.dividerMargins :
+                                                                                      root.handleMargins
+                x: background.leftValues[index] * root.effectiveDraggingWidth + leftMargin + (index > 0
+                                                                                              ? root.leftPadding :
+                                                                                                0)
+                width: background.leftWidths[index] * root.effectiveDraggingWidth - leftMargin - rightMargin
+                       - (index === background.leftWidths.length - 1 ? root.handleWidth / 2 : 0) + (index
+                                                                                                    === 0 ? root.leftPadding :
+                                                                                                            0)
                 height: root.trackWidth
 
                 sourceComponent: Rectangle {
@@ -146,9 +165,15 @@ Slider {
                 anchors.verticalCenter: background.verticalCenter
                 active: root.wavy
                 property real leftMargin: index > 0 ? root.dividerMargins : 0
-                property real rightMargin: index < background.leftWidths.length - 1 ? root.dividerMargins : root.handleMargins
-                x: background.leftValues[index] * root.effectiveDraggingWidth + leftMargin + (index > 0 ? root.leftPadding : 0)
-                width: background.leftWidths[index] * root.effectiveDraggingWidth - leftMargin - rightMargin - (index === background.leftWidths.length - 1 ? root.handleWidth / 2 : 0) + (index === 0 ? root.leftPadding : 0)
+                property real rightMargin: index < background.leftWidths.length - 1 ? root.dividerMargins :
+                                                                                      root.handleMargins
+                x: background.leftValues[index] * root.effectiveDraggingWidth + leftMargin + (index > 0
+                                                                                              ? root.leftPadding :
+                                                                                                0)
+                width: background.leftWidths[index] * root.effectiveDraggingWidth - leftMargin - rightMargin
+                       - (index === background.leftWidths.length - 1 ? root.handleWidth / 2 : 0) + (index
+                                                                                                    === 0 ? root.leftPadding :
+                                                                                                            0)
                 height: root.height
 
                 sourceComponent: WavyLine {
@@ -189,12 +214,20 @@ Slider {
                 anchors.verticalCenter: background.verticalCenter
                 property real leftMargin: index > 0 ? root.dividerMargins : root.handleMargins
                 property real rightMargin: index < background.rightWidths.length - 1 ? root.dividerMargins : 0
-                x: background.rightValues[index] * root.effectiveDraggingWidth + leftMargin + (index === 0 ? root.handleWidth / 2 : 0) + root.leftPadding
-                width: background.rightWidths[index] * root.effectiveDraggingWidth - leftMargin - rightMargin - (index === 0 ? root.handleWidth / 2 : 0) + (index === background.rightWidths.length - 1 ? root.rightPadding : 0)
+                x: background.rightValues[index] * root.effectiveDraggingWidth + leftMargin + (index === 0
+                                                                                               ? root.handleWidth
+                                                                                                 / 2 : 0)
+                   + root.leftPadding
+                width: background.rightWidths[index] * root.effectiveDraggingWidth - leftMargin - rightMargin
+                       - (index === 0 ? root.handleWidth / 2 : 0) + (index === background.rightWidths.length
+                                                                     - 1 ? root.rightPadding : 0)
                 height: root.trackWidth
                 color: root.trackColor
-                topRightRadius: index === background.rightWidths.length - 1 ? root.trackRadius : root.unsharpenRadius
-                bottomRightRadius: index === background.rightWidths.length - 1 ? root.trackRadius : root.unsharpenRadius
+                topRightRadius: index === background.rightWidths.length - 1 ? root.trackRadius :
+                                                                              root.unsharpenRadius
+                bottomRightRadius: index === background.rightWidths.length - 1 ? root.trackRadius :
+                                                                                 root.unsharpenRadius
+
                 topLeftRadius: root.unsharpenRadius
                 bottomLeftRadius: root.unsharpenRadius
             }

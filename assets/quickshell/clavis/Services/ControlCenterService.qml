@@ -1,6 +1,7 @@
 pragma Singleton
 
 import QtQuick
+import qs.Common
 import qs.Services
 import Quickshell
 import Quickshell.Wayland
@@ -150,6 +151,7 @@ Singleton {
     }
 
     function open(pageId, preserveSearch) {
+        WidgetState.closeAllPopups();
         if (!preserveSearch) {
             cancelSearch();
             searchError = "";
@@ -182,6 +184,7 @@ Singleton {
     }
 
     function openOrFocus() {
+        WidgetState.closeAllPopups();
         if (root.visible) {
             const target = ToplevelManager.toplevels.values.find(window => window.title
                                                                            === root.controlCenterWindow.title);

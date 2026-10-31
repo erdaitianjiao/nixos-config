@@ -6,6 +6,32 @@ import "../../Common/functions/WallpaperMath.js" as WallpaperMath
 TestCase {
     name: "WallpaperMathAndAwwwCommand"
 
+    function test_floatingParallaxUsesWallpaperColumnDirection() {
+        const columns = [1, 2, 3, 4, 5, 6];
+        let previous = Infinity;
+        for (const column of columns) {
+            const progress = WallpaperMath.focusedColumnProgress(columns, column, 6);
+            const offset = WallpaperMath.floatingParallaxOffset(progress, false, false, true, false, 96);
+            verify(offset < previous);
+            verify(Math.abs(offset) <= 96);
+            previous = offset;
+        }
+    }
+
+    function test_floatingParallaxSidebarsComposeAndRestore() {
+        for (const progress of [0, 0.5, 1]) {
+            const resting = WallpaperMath.floatingParallaxOffset(progress, false, false, true, true, 96);
+            const left = WallpaperMath.floatingParallaxOffset(progress, true, false, true, true, 96);
+            const right = WallpaperMath.floatingParallaxOffset(progress, false, true, true, true, 96);
+            compare(left - resting, 96);
+            compare(right - resting, -96);
+            compare(WallpaperMath.floatingParallaxOffset(progress, true, true, true, true, 96), resting);
+        }
+        compare(WallpaperMath.floatingParallaxOffset(0, true, false, false, true, 96), 96);
+        compare(WallpaperMath.floatingParallaxOffset(1, false, true, false, true, 96), -96);
+        compare(WallpaperMath.floatingParallaxOffset(0, true, false, false, false, 96), 0);
+    }
+
     function transitionCommand(type, overrides) {
         const settings = {
             type: type,

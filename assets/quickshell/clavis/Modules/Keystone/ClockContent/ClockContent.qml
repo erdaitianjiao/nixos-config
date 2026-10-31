@@ -13,17 +13,18 @@ Item {
     property string dateStr: ""
     property var verticalDateParts: []
     readonly property string clockFamily: Fonts.systemClock
-    readonly property var horizontalClockAxes: root.safeHorizontalClockAxes(PersonalizationConfig.horizontalClockAxes)
+    readonly property var horizontalClockAxes: root.safeHorizontalClockAxes(
+                                                   PersonalizationConfig.horizontalClockAxes)
     readonly property var verticalClockAxes: Fonts.familyAvailable(Fonts.systemClock) ? ({
-        "wght": 900,
-        "wdth": 85,
-        "opsz": 24,
-        "GRAD": 75,
-        "ROND": 25,
-        "slnt": 0
-    }) : ({
-    })
-    readonly property real horizontalFontSize: root.boundedNumber(PersonalizationConfig.horizontalClockFontSize, 22, 16, 28)
+                                                                                             "wght": 900,
+                                                                                             "wdth": 85,
+                                                                                             "opsz": 24,
+                                                                                             "GRAD": 75,
+                                                                                             "ROND": 25,
+                                                                                             "slnt": 0
+                                                                                         }) : ({})
+    readonly property real horizontalFontSize: root.boundedNumber(
+                                                   PersonalizationConfig.horizontalClockFontSize, 22, 16, 28)
     // 【核心变化1】把时间拆分成 4 个独立的整数型变量，绑定动画目标值
     property int h0: 0
     property int h1: 0
@@ -43,11 +44,9 @@ Item {
         const defaults = PersonalizationConfig.horizontalClockAxisDefaults;
         const minimums = PersonalizationConfig.horizontalClockAxisMinimums;
         const maximums = PersonalizationConfig.horizontalClockAxisMaximums;
-        const result = {
-        };
+        const result = {};
         const names = ["wght", "wdth", "opsz", "GRAD", "ROND", "slnt"];
-        const values = source && typeof source === "object" ? source : {
-        };
+        const values = source && typeof source === "object" ? source : {};
         for (let i = 0; i < names.length; i += 1) {
             const name = names[i];
             result[name] = root.boundedNumber(values[name], defaults[name], minimums[name], maximums[name]);
@@ -58,10 +57,8 @@ Item {
     function horizontalDigitValue(id, field) {
         const defaults = PersonalizationConfig.horizontalClockDigitDefaults;
         const configured = PersonalizationConfig.horizontalClockDigits;
-        const fallback = defaults[id] || {
-        };
-        const candidate = configured && configured[id] ? configured[id] : {
-        };
+        const fallback = defaults[id] || {};
+        const candidate = configured && configured[id] ? configured[id] : {};
         const limits = field === "x" ? [-8, 8] : field === "y" ? [-6, 6] : [-12, 12];
         return root.boundedNumber(candidate[field], fallback[field] || 0, limits[0], limits[1]);
     }
@@ -69,20 +66,24 @@ Item {
     function horizontalDigitColor(id) {
         const defaults = PersonalizationConfig.horizontalClockDigitDefaults;
         const configured = PersonalizationConfig.horizontalClockDigits;
-        const fallback = defaults[id] || {
-        };
+        const fallback = defaults[id] || {};
         const candidate = configured && configured[id] ? configured[id] : fallback;
-        if (candidate.colorRole === "custom" && /^#([0-9a-f]{6}|[0-9a-f]{8})$/i.test(String(candidate.customColor || "")))
+        if (candidate.colorRole === "custom" && /^#([0-9a-f]{6}|[0-9a-f]{8})$/i.test(String(
+                                                                                         candidate.customColor
+                                                                                         || "")))
             return candidate.customColor;
 
-        return candidate.colorRole === "inversePrimary" ? Appearance.colors.colInversePrimary : Appearance.colors.colPrimary;
+        return candidate.colorRole === "inversePrimary" ? Appearance.colors.colInversePrimary :
+                                                          Appearance.colors.colPrimary;
     }
 
     function formatDate(date) {
         if (DateFormat.isChinese(I18nService.language))
-            return String(date.getMonth() + 1).padStart(2, "0") + "月" + String(date.getDate()).padStart(2, "0") + "日" + DateFormat.shortWeekdays(I18nService.language)[date.getDay()];
+            return String(date.getMonth() + 1).padStart(2, "0") + "月" + String(date.getDate()).padStart(2, "0")
+                    + "日" + DateFormat.shortWeekdays(I18nService.language)[date.getDay()];
 
-        return DateFormat.compactDate(date, I18nService.language, Qt.locale(I18nService.language), "ddd dd MMM");
+        return DateFormat.compactDate(date, I18nService.language, Qt.locale(I18nService.language),
+                                      "ddd dd MMM");
     }
 
     // Side Keystone uses short horizontal rows: up to three Latin letters,
@@ -91,10 +92,12 @@ Item {
     function sideDateParts(date) {
         if (DateFormat.isChinese(I18nService.language)) {
             const weekday = DateFormat.shortWeekdays(I18nService.language)[date.getDay()];
-            return [String(date.getMonth() + 1).padStart(2, "0"), "月", String(date.getDate()).padStart(2, "0"), "日", weekday.slice(0, 1), weekday.slice(1, 2)];
+            return [String(date.getMonth() + 1).padStart(2, "0"), "月", String(date.getDate()).padStart(2, "0"),
+                    "日", weekday.slice(0, 1), weekday.slice(1, 2)];
         }
         const locale = Qt.locale(I18nService.language);
-        return [date.toLocaleDateString(locale, "ddd").slice(0, 3), String(date.getDate()).padStart(2, "0"), date.toLocaleDateString(locale, "MMM").slice(0, 3)];
+        return [date.toLocaleDateString(locale, "ddd").slice(0, 3), String(date.getDate()).padStart(2, "0"),
+                date.toLocaleDateString(locale, "MMM").slice(0, 3)];
     }
 
     Timer {
@@ -149,7 +152,6 @@ Item {
                 radius: width / 2
                 color: Appearance.colors.colOutlineVariant
             }
-
         }
 
         // --- 右侧 Standby 滚动时钟 ---
@@ -172,29 +174,11 @@ Item {
                     targetDigit: root.h1
                     digitColor: root.horizontalDigitColor("h1")
                 }
-
             }
 
-            // 冒号
-            Column {
-                spacing: 3
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.verticalCenterOffset: 1
-
-                Rectangle {
-                    width: 4
-                    height: 4
-                    radius: 2
-                    color: Appearance.colors.colOutlineVariant
-                }
-
-                Rectangle {
-                    width: 4
-                    height: 4
-                    radius: 2
-                    color: Appearance.colors.colOutlineVariant
-                }
-
+            ClockLetter {
+                letterId: "separator"
+                value: ":"
             }
 
             // 分钟部分
@@ -212,7 +196,6 @@ Item {
                     targetDigit: root.m1
                     digitColor: root.horizontalDigitColor("m1")
                 }
-
             }
 
             Row {
@@ -229,11 +212,8 @@ Item {
                     letterId: "periodM"
                     value: "M"
                 }
-
             }
-
         }
-
     }
 
     Column {
@@ -264,9 +244,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-
             }
-
         }
 
         Item {
@@ -282,7 +260,6 @@ Item {
                 radius: height / 2
                 color: Appearance.colors.colOutlineVariant
             }
-
         }
 
         Column {
@@ -322,11 +299,8 @@ Item {
                             radius: width / 2
                             color: Appearance.colors.colOutlineVariant
                         }
-
                     }
-
                 }
-
             }
 
             Text {
@@ -357,9 +331,7 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
-
         }
-
     }
 
     // ============================================================
@@ -413,11 +385,8 @@ Item {
                     damping: 0.75
                     mass: 1
                 }
-
             }
-
         }
-
     }
 
     component ClockLetter: Item {
@@ -456,7 +425,5 @@ Item {
             lineHeight: letterContainer.lineHeight
             lineHeightMode: Text.FixedHeight
         }
-
     }
-
 }

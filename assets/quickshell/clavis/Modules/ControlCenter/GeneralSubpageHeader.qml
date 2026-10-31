@@ -29,13 +29,20 @@ Item {
             onClicked: root.backRequested()
         }
 
-        MaterialSymbol {
+        Rectangle {
             visible: root.iconName !== ""
-            Layout.preferredWidth: visible ? Metrics.iconM : 0
-            Layout.preferredHeight: Metrics.iconM
-            text: root.iconName
-            iconSize: Metrics.iconM
-            color: Appearance.colors.colOnSurfaceVariant
+            Layout.preferredWidth: Metrics.controlHeightM
+            Layout.preferredHeight: Metrics.controlHeightM
+            radius: Appearance.rounding.normal
+            color: Appearance.colors.colSecondaryContainer
+
+            MaterialSymbol {
+                anchors.centerIn: parent
+                text: root.iconName
+                iconSize: Metrics.iconM
+                fill: 1
+                color: Appearance.colors.colOnSecondaryContainer
+            }
         }
 
         Text {

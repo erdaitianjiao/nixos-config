@@ -130,7 +130,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "verified_user"
                 title: qsTr("Trusted device")
 
                 trailing: StyledSwitch {
@@ -146,7 +145,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "block"
                 title: qsTr("Block device")
 
                 trailing: StyledSwitch {
@@ -162,7 +160,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "power_settings_new"
                 title: qsTr("Allow wake")
 
                 trailing: StyledSwitch {
@@ -184,7 +181,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "battery_full"
                 title: qsTr("Battery")
                 supportingText: root.device && root.device.batteryAvailable ? qsTr("%1%").arg(root.device.batteryLevel) :
                                                                               qsTr("Unavailable")
@@ -202,14 +198,12 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "fingerprint"
                 title: qsTr("Address")
                 supportingText: root.device ? root.device.address : ""
             }
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "settings_bluetooth"
                 title: qsTr("Adapter")
                 supportingText: root.device ? root.device.adapterId : ""
             }

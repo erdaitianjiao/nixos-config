@@ -24,7 +24,7 @@ ColumnLayout {
     }
     DisplayChoice {
         Layout.fillWidth: true
-        title: qsTr("Hot corners")
+        title: qsTr("Overview corners")
         options: [
             {
                 value: "inherit",

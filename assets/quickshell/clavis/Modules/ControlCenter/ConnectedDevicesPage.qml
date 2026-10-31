@@ -62,7 +62,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: BluetoothService.enabled ? "bluetooth" : "bluetooth_disabled"
                 title: qsTr("Bluetooth")
 
                 trailing: StyledSwitch {
@@ -182,7 +181,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "visibility"
                 title: qsTr("Allow discovery")
 
                 trailing: StyledSwitch {
@@ -195,7 +193,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "handshake"
                 title: qsTr("Allow pairing")
 
                 trailing: StyledSwitch {

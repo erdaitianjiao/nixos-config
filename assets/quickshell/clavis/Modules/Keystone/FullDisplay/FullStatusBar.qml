@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import qs.Services
 import qs.Modules.Keystone.ClockContent
 import qs.Modules.Bar.Workspaces
+import qs.Modules.Bar.Tray
 import qs.Modules.Bar.Media
 import qs.Modules.Bar.SysMonitor
 
@@ -20,8 +21,11 @@ Item {
     readonly property alias clockItem: clock
     // Reserve equal space on both sides so changing module sizes never
     // pushes the clock away from the main island's geometric centre.
-    readonly property real contentLength: 220 + 2 * (Math.max(leadingLane.contentExtent,
-                                                              trailingLane.contentExtent) + 28)
+    readonly property real contentLength: PersonalizationConfig.keystoneCompactLength + 2 * (Math.max(
+                                                                                                 leadingLane.contentExtent,
+                                                                                                 trailingLane.contentExtent)
+                                                                                             + PersonalizationConfig.keystoneInsetPadding
+                                                                                             + 12)
 
     signal clockClicked(int button)
     signal mediaRequested
@@ -33,8 +37,10 @@ Item {
     ClockContent {
         id: clock
         anchors.centerIn: parent
-        width: root.vertical ? 42 : 220
-        height: root.vertical ? 220 : 42
+        width: root.vertical ? PersonalizationConfig.keystoneThickness :
+                               PersonalizationConfig.keystoneCompactLength
+        height: root.vertical ? PersonalizationConfig.keystoneCompactLength :
+                                PersonalizationConfig.keystoneThickness
         edge: root.edge
         player: MediaManager.active
 
@@ -51,20 +57,25 @@ Item {
 
     StatusLane {
         id: leadingLane
-        items: PersonalizationConfig.keystoneLongLeading
-        x: root.vertical ? 0 : 16
-        y: root.vertical ? 16 : 0
-        width: root.vertical ? root.width : Math.max(0, clock.x - 28)
-        height: root.vertical ? Math.max(0, clock.y - 28) : root.height
+        items: PersonalizationConfig.keystoneFullLeading
+        x: root.vertical ? 0 : PersonalizationConfig.keystoneInsetPadding
+        y: root.vertical ? PersonalizationConfig.keystoneInsetPadding : 0
+        width: root.vertical ? root.width : Math.max(0, clock.x - PersonalizationConfig.keystoneInsetPadding
+                                                     - 12)
+        height: root.vertical ? Math.max(0, clock.y - PersonalizationConfig.keystoneInsetPadding - 12) :
+                                root.height
+
     }
 
     StatusLane {
         id: trailingLane
-        items: PersonalizationConfig.keystoneLongTrailing
+        items: PersonalizationConfig.keystoneFullTrailing
         x: root.vertical ? 0 : clock.x + clock.width + 12
         y: root.vertical ? clock.y + clock.height + 12 : 0
-        width: root.vertical ? root.width : Math.max(0, root.width - x - 16)
-        height: root.vertical ? Math.max(0, root.height - y - 16) : root.height
+        width: root.vertical ? root.width : Math.max(0, root.width - x
+                                                     - PersonalizationConfig.keystoneInsetPadding)
+        height: root.vertical ? Math.max(0, root.height - y - PersonalizationConfig.keystoneInsetPadding) :
+                                root.height
         trailing: true
     }
 
@@ -81,8 +92,8 @@ Item {
             y: root.vertical ? (lane.trailing ? Math.max(0, lane.height - height) : 0) : (lane.height - height)
                                / 2
             columns: root.vertical ? 1 : Math.max(1, lane.items.length)
-            rowSpacing: 8
-            columnSpacing: 8
+            rowSpacing: PersonalizationConfig.keystoneItemSpacing
+            columnSpacing: PersonalizationConfig.keystoneItemSpacing
 
             Repeater {
                 model: lane.items
@@ -91,10 +102,12 @@ Item {
                     required property string modelData
                     Layout.alignment: Qt.AlignCenter
                     Layout.preferredWidth: root.vertical ? root.width : implicitWidth
-                    sourceComponent: modelData === "workspaces" ? workspaces : modelData === "media" ? media : modelData
-                                                                                                       === "systemMonitor"
-                                                                                                       ? systemMonitor :
-                                                                                                         status
+                    sourceComponent: modelData === "tray" ? tray : modelData === "workspaces" ? workspaces : modelData
+                                                                                                === "media"
+                                                                                                ? media : modelData
+                                                                                                  === "systemMonitor"
+                                                                                                  ? systemMonitor :
+                                                                                                    status
 
                     Component {
                         id: workspaces
@@ -106,9 +119,19 @@ Item {
                     }
 
                     Component {
+                        id: tray
+                        Tray {
+                            screen: root.screen
+                            edge: root.edge
+                            vertical: root.vertical
+                            barVisualItem: root
+                            backgroundVisible: false
+                        }
+                    }
+
+                    Component {
                         id: media
                         MediaBar {
-                            showSpectrum: PersonalizationConfig.keystoneLongShowSpectrum
                             vertical: root.vertical
                             edge: root.edge
                             maximumTitleWidth: root.vertical ? 120 : 180
@@ -119,7 +142,7 @@ Item {
                     Component {
                         id: systemMonitor
                         SysMonitor {
-                            showValues: PersonalizationConfig.keystoneLongShowMonitorValues
+                            showValues: PersonalizationConfig.keystoneFullShowMonitorValues
                             vertical: root.vertical
                             ownerId: "keystone-long:" + String(root.screen ? root.screen.name : "default") + (
                                          lane.trailing ? ":trailing" : ":leading")
@@ -129,7 +152,7 @@ Item {
 
                     Component {
                         id: status
-                        LongStatusItem {
+                        FullStatusItem {
                             maximumNameWidth: root.vertical ? 96 : 160
                             itemId: statusLoader.modelData
                             edge: root.edge

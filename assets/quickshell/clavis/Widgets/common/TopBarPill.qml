@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 import qs.Common
+import qs.Services
 
 Item {
     id: root
@@ -8,6 +9,13 @@ Item {
     default property alias contentData: contentViewport.data
     property bool animateResize: true
     property bool backgroundVisible: true
+    readonly property real pillThickness: backgroundVisible ? PersonalizationConfig.barThickness :
+                                                              Sizes.barPillThickness
+    readonly property real pillPadding: backgroundVisible ? PersonalizationConfig.barInnerPadding :
+                                                            Sizes.barPillHorizontalPadding
+    readonly property real radius: Math.min(width / 2, height / 2, backgroundVisible
+                                            ? PersonalizationConfig.barModuleRadius : Math.min(width, height)
+                                              / 2)
 
     // Animate the size consumed by the bar layout so the surface, shadow and
     // neighbouring pills follow the same geometry throughout a resize.
@@ -19,12 +27,13 @@ Item {
         TopBarPillBackground {
             anchors.fill: parent
             visible: root.backgroundVisible
+            cornerRadius: root.radius
         },
         Rectangle {
             id: contentMask
             width: root.width
             height: root.height
-            radius: Math.min(width, height) / 2
+            radius: root.radius
             color: "white"
             visible: false
             layer.enabled: true

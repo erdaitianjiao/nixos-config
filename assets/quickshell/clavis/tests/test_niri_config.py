@@ -41,6 +41,123 @@ class ConfigurationContracts(unittest.TestCase):
         self.run_config('setup')
         return self.run_config()
 
+    def test_hot_corners_setup_is_explicit_and_preserves_other_settings(self):
+        original = ('// User gestures stay intact\n'
+                    'gestures { dnd-edge-view-scroll { trigger-width 60; }; hot-corners { top-right; }; }\n'
+                    'output "DP-1" { scale 1.5; position x=0 y=0; }\n'
+                    'output "DP-2" { hot-corners { off; }; }\n')
+        self.main.write_text(original)
+        state = self.run_config()
+        self.assertEqual(state['fragments']['hot-corners']['state'], 'not-connected')
+        self.assertFalse(state['hotCorners']['disabled'])
+        self.assertFalse(self.fragment('hot-corners').exists())
+        self.assertEqual(self.main.read_text(), original)
+
+        state = self.run_config('setup', feature='hot-corners')
+        self.assertEqual(state['fragments']['hot-corners']['state'], 'ready')
+        self.assertTrue(state['hotCorners']['disabled'])
+        self.assertFalse(state['diagnostics']['invalid'])
+        self.assertTrue(self.main.read_text().startswith(original))
+        self.assertEqual(len(list(self.main.parent.glob('config.kdl.clavis-backup-*'))), 1)
+        saved = self.fragment('hot-corners').read_bytes()
+        connected = self.main.read_bytes()
+        self.run_config('setup', feature='hot-corners')
+        self.assertEqual(self.main.read_bytes(), connected)
+        self.assertEqual(self.fragment('hot-corners').read_bytes(), saved)
+
+    def test_hot_corners_setup_repairs_owned_setting_and_preserves_owned_gestures(self):
+        fragment = self.fragment('hot-corners')
+        fragment.parent.mkdir()
+        original = ('// Custom gestures\r\n'
+                    'gestures { dnd-edge-workspace-switch { delay-ms 250; }; '
+                    'hot-corners { bottom-right; }; }\r\n')
+        fragment.write_bytes(original.encode())
+        state = self.run_config('setup', feature='hot-corners')
+        self.assertEqual(state['fragments']['hot-corners']['state'], 'ready')
+        self.assertTrue(state['hotCorners']['disabled'])
+        result = fragment.read_bytes().decode()
+        self.assertTrue(result.startswith('// Custom gestures\r\n'))
+        self.assertIn('dnd-edge-workspace-switch { delay-ms 250; };', result)
+        self.assertTrue(result.endswith('; }\r\n'))
+
+    def test_hot_corners_output_overrides_abort_setup_without_writes(self):
+        included = self.main.parent / 'monitors.kdl'
+        external = ('// Output configuration is not owned by Clavis\n'
+                    'output "DP-1" { scale 1.5; hot-corners {}; }\n'
+                    'output "Vendor Screen Serial" { transform "90"; hot-corners { bottom-left; }; }\n')
+        included.write_text(external)
+        self.main.write_text('include "monitors.kdl"\n')
+        original = self.main.read_bytes()
+        state = self.run_config()
+        self.assertEqual(state['hotCorners']['outputConflicts'], [
+            dict(identifier='DP-1', source=str(included)),
+            dict(identifier='Vendor Screen Serial', source=str(included))])
+        with self.assertRaisesRegex(ValueError, 'DP-1'):
+            self.run_config('setup', feature='hot-corners')
+        self.assertEqual(self.main.read_bytes(), original)
+        self.assertEqual(included.read_text(), external)
+        self.assertFalse(self.fragment('hot-corners').exists())
+        self.assertEqual(list(self.main.parent.glob('config.kdl.clavis-backup-*')), [])
+
+    def test_hot_corners_external_edits_revoke_readiness(self):
+        self.run_config('setup', feature='hot-corners')
+        saved = self.fragment('hot-corners').read_bytes()
+        included = self.main.parent / 'later.kdl'
+        included.write_text('gestures { hot-corners {}; }\n')
+        self.main.write_text(self.main.read_text() + 'include "later.kdl"\n')
+        connected = self.main.read_bytes()
+        state = self.run_config()
+        self.assertEqual(state['fragments']['hot-corners']['state'], 'conflict')
+        self.assertFalse(state['hotCorners']['globalDisabled'])
+        self.assertEqual(state['hotCorners']['globalSource'], str(included))
+        with self.assertRaisesRegex(ValueError, 'move the Clavis'):
+            self.run_config('setup', feature='hot-corners')
+        self.assertEqual(self.main.read_bytes(), connected)
+        self.assertEqual(self.fragment('hot-corners').read_bytes(), saved)
+
+        included.write_text('gestures { dnd-edge-view-scroll { trigger-width 70; }; }\n')
+        self.assertEqual(self.run_config()['fragments']['hot-corners']['state'], 'ready')
+        included.write_text('output "Disconnected Display" { hot-corners { top-right; }; }\n')
+        state = self.run_config()
+        self.assertEqual(state['fragments']['hot-corners']['state'], 'conflict')
+        self.assertTrue(state['hotCorners']['globalDisabled'])
+        self.assertEqual(state['hotCorners']['outputConflicts'], [
+            dict(identifier='Disconnected Display', source=str(included))])
+
+    def test_hot_corners_uses_first_case_insensitive_output_match(self):
+        self.main.write_text('output "DP-1" { hot-corners { off; }; }\n'
+                             'output "dp-1" { hot-corners { top-right; }; }\n')
+        state = self.run_config('setup', feature='hot-corners')
+        self.assertEqual(state['fragments']['hot-corners']['state'], 'ready')
+        self.assertEqual(state['hotCorners']['outputConflicts'], [])
+
+    def test_hot_corners_invalid_config_and_missing_include_are_not_ready(self):
+        self.run_config('setup', feature='hot-corners')
+        connected = self.main.read_text()
+        self.main.write_text(connected + 'unknown-niri-setting\n')
+        state = self.run_config()
+        self.assertEqual(state['fragments']['hot-corners']['state'], 'error')
+        self.assertTrue(state['diagnostics']['invalid'])
+        self.main.write_text(connected + 'include "clavis/cursor.kdl"\n')
+        self.assertEqual(self.run_config()['fragments']['hot-corners']['state'], 'error')
+        self.main.write_text(connected + 'include "optional.kdl" optional=true\n')
+        self.assertEqual(self.run_config()['fragments']['hot-corners']['state'], 'ready')
+
+    def test_hot_corners_rejected_validation_and_stale_revision_do_not_write(self):
+        original = self.main.read_bytes()
+        with mock.patch.object(config.Graph, 'validate', side_effect=ValueError('Unavailable hot corners')):
+            with self.assertRaisesRegex(ValueError, 'Unavailable'):
+                self.run_config('setup', feature='hot-corners')
+        self.assertEqual(self.main.read_bytes(), original)
+        self.assertFalse(self.fragment('hot-corners').exists())
+        state = self.run_config()
+        self.main.write_text(self.main.read_text() + '// external change\n')
+        changed = self.main.read_bytes()
+        with self.assertRaisesRegex(ValueError, 'changed externally'):
+            self.run_config('setup', feature='hot-corners', revision=state['revision'])
+        self.assertEqual(self.main.read_bytes(), changed)
+        self.assertFalse(self.fragment('hot-corners').exists())
+
     @mock.patch.object(config.Graph, 'validate')
     def test_minimize_style_roundtrip_preserves_animation_settings(self, validate):
         original = 'animations { off; window-open { duration-ms 90; }; window-minimize { duration-ms 600; }; }\n'
@@ -325,8 +442,17 @@ class ConfigurationContracts(unittest.TestCase):
                 self.assertTrue(path.exists())
                 text = self.main.read_bytes()
                 path.write_text('')
-                self.run_config('setup', feature)
-                self.assertEqual(path.read_text(), '')
+                state = self.run_config('setup', feature)
+                if feature == 'hot-corners':
+                    # Explicitly taking over corners must restore the native
+                    # disable setting before the shell can receive corner input.
+                    self.assertEqual(state['fragments'][feature]['state'], 'ready')
+                    self.assertTrue(state['hotCorners']['disabled'])
+                    configured = path.read_bytes()
+                    self.run_config('setup', feature)
+                    self.assertEqual(path.read_bytes(), configured)
+                else:
+                    self.assertEqual(path.read_text(), '')
                 self.assertEqual(text, self.main.read_bytes())
                 path.unlink()
                 self.assertEqual(self.run_config(feature=feature)['fragments'][feature]['state'], 'missing')

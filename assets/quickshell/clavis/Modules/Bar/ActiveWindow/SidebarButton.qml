@@ -9,29 +9,25 @@ TopBarPill {
 
     property bool vertical: false
 
-    implicitHeight: vertical ? buttonRow.implicitHeight + 16 : Sizes.barPillThickness
-    implicitWidth: vertical ? Sizes.barVisualThickness : buttonRow.implicitWidth + 16
+    implicitHeight: vertical ? buttonRow.implicitHeight + 2 * root.pillPadding : root.pillThickness
+    implicitWidth: vertical ? root.pillThickness : buttonRow.implicitWidth + 2 * root.pillPadding
 
     GridLayout {
         id: buttonRow
 
         anchors.centerIn: parent
-        rowSpacing: 8
-        columnSpacing: 8
+        rowSpacing: Sizes.barItemSpacing
+        columnSpacing: Sizes.barItemSpacing
         columns: root.vertical ? 1 : 3
 
         SidebarPillButton {
             viewName: "info"
             sidebarIconName: "notifications"
-            activeColor: Appearance.colors.colSecondary
-            activeContentColor: Appearance.colors.colOnSecondary
         }
 
         SidebarPillButton {
             viewName: "drawer"
             sidebarIconName: "widgets"
-            activeColor: Appearance.colors.colTertiary
-            activeContentColor: Appearance.colors.colOnTertiary
         }
 
         SidebarWeatherButton {

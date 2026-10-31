@@ -29,8 +29,8 @@ TopBarPill {
     readonly property var pinnedItems: TrayService.pinnedItems
     readonly property var unpinnedItems: TrayService.unpinnedItems
 
-    implicitHeight: vertical ? content.implicitHeight + 16 : Sizes.barPillThickness
-    implicitWidth: vertical ? Sizes.barVisualThickness : content.implicitWidth + 24
+    implicitHeight: vertical ? content.implicitHeight + 2 * root.pillPadding : root.pillThickness
+    implicitWidth: vertical ? root.pillThickness : content.implicitWidth + 2 * root.pillPadding
 
     onUnpinnedItemsChanged: {
         if (root.unpinnedItems.length === 0) {
@@ -145,8 +145,8 @@ TopBarPill {
         id: content
 
         anchors.centerIn: parent
-        rowSpacing: 15
-        columnSpacing: 15
+        rowSpacing: Sizes.barItemSpacing
+        columnSpacing: Sizes.barItemSpacing
         columns: root.vertical ? 1 : Math.max(1, root.pinnedItems.length + 1)
 
         RippleButton {
@@ -154,8 +154,8 @@ TopBarPill {
 
             visible: root.unpinnedItems.length > 0
             toggled: root.trayOverflowOpen
-            implicitWidth: 24
-            implicitHeight: 24
+            implicitWidth: Sizes.barControlCircleSize
+            implicitHeight: Sizes.barControlCircleSize
             buttonRadius: Appearance.rounding.full
             containerColor: root.trayOverflowOpen ? Appearance.colors.colSecondaryContainer : "transparent"
             stateLayerColor: root.trayOverflowOpen ? Appearance.colors.colSecondaryContainerHover :
@@ -179,7 +179,7 @@ TopBarPill {
             contentItem: MaterialSymbol {
                 anchors.centerIn: parent
                 text: "expand_more"
-                iconSize: 19
+                iconSize: Sizes.barIconSize
                 color: root.trayOverflowOpen || trayOverflowButton.pointerHovered
                        ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer0
                 rotation: (root.edge === "left" ? -90 : root.edge === "right" ? 90 : 0) + (
@@ -231,7 +231,7 @@ TopBarPill {
             right: true
         }
 
-        WlrLayershell.layer: WlrLayer.Top
+        WlrLayershell.layer: root.QsWindow.window ? root.QsWindow.window.WlrLayershell.layer : WlrLayer.Top
         WlrLayershell.namespace: "clavis-shell-tray-overflow"
         WlrLayershell.keyboardFocus: overflowPopup.visible ? WlrKeyboardFocus.Exclusive :
                                                              WlrKeyboardFocus.None

@@ -133,7 +133,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Dashboard sidebar position")
-                iconName: "dashboard"
                 trailing: StyledButtonGroup {
                     model: [
                         {
@@ -153,7 +152,6 @@ StyledFlickable {
             SettingsRow {
                 Layout.fillWidth: true
                 title: qsTr("Quick settings sidebar position")
-                iconName: "tune"
                 trailing: StyledButtonGroup {
                     model: [
                         {
@@ -172,7 +170,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "side_navigation"
                 title: qsTr("Keep sidebar loaded")
                 supportingText: qsTr("Opens faster next time, but uses more memory")
 
@@ -252,7 +249,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "grid_4x4"
                 title: qsTr("Snap desktop cards to grid")
 
                 trailing: StyledSwitch {
@@ -264,7 +260,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "grid_on"
                 title: qsTr("Show desktop grid while dragging")
 
                 trailing: StyledSwitch {
@@ -321,7 +316,6 @@ StyledFlickable {
                 SettingsRow {
                     Layout.fillWidth: true
                     enabled: root.cookieClockActive
-                    iconName: "add_triangle"
                     title: qsTr("Sides")
                     supportingText: qsTr("0 or 1 produces a circle; up to 40 sides")
 
@@ -340,7 +334,6 @@ StyledFlickable {
                 SettingsRow {
                     Layout.fillWidth: true
                     enabled: root.cookieClockActive
-                    iconName: "autoplay"
                     title: qsTr("Constantly rotate")
 
                     trailing: StyledSwitch {
@@ -355,7 +348,6 @@ StyledFlickable {
                     Layout.fillWidth: true
                     enabled: root.cookieClockActive && (UiPreferences.sidebarCookieDialStyle === "dots"
                                                         || UiPreferences.sidebarCookieDialStyle === "full")
-                    iconName: "brightness_7"
                     title: qsTr("Hour marks")
                     supportingText: qsTr("Available with Dots or Full dials")
 
@@ -369,7 +361,6 @@ StyledFlickable {
                 SettingsRow {
                     Layout.fillWidth: true
                     enabled: root.cookieClockActive && UiPreferences.sidebarCookieDialStyle !== "numbers"
-                    iconName: "timer_10"
                     title: qsTr("Digits in the middle")
                     supportingText: qsTr("Unavailable with the Numbers dial")
 
@@ -648,7 +639,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "developer_board"
                 title: qsTr("GPU")
                 supportingText: qsTr("Select the graphics device shown by the GPU card")
 
@@ -666,7 +656,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "speed"
                 title: qsTr("System monitor snapshot interval")
 
                 trailing: MaterialFilledTextField {
@@ -704,7 +693,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "data_usage"
                 title: qsTr("Disk capacity")
                 supportingText: qsTr("Select the physical disk shown by the capacity card")
 

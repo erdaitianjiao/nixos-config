@@ -44,7 +44,6 @@ StyledFlickable {
 
             SettingsRow {
                 Layout.fillWidth: true
-                iconName: "language"
                 title: qsTr("Interface language")
 
                 trailing: SearchSelectMenuField {

@@ -3,6 +3,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Clavis.Runtime
 import qs.Components
 import qs.Common
 import qs.Services
@@ -13,6 +14,18 @@ import "../../Common/functions/DockMedia.js" as DockMedia
 
 Item {
     id: root
+
+    ProcessQuit {
+        id: processQuit
+    }
+    property bool quitFailed: false
+    function resetQuit() {
+        processQuit.cancel();
+        quitFailed = false;
+    }
+    onVisibleChanged: if (!visible)
+                          resetQuit()
+    onEntryKeyChanged: resetQuit()
 
     required property string entryKey
     required property string outputName
@@ -317,6 +330,54 @@ Item {
                         DockService.launch(root.entryKey);
                         root.dismissed();
                     }
+                }
+                StyledMenuItem {
+                    width: parent.width
+                    implicitHeight: 32
+                    leftPadding: 8
+                    rightPadding: 8
+                    visible: root.windows.length > 0
+                    text: qsTr("Close all windows")
+                    onTriggered: {
+                        // Snapshot current IDs before close events can change the group.
+                        const ids = DockService.windowsFor(root.entryKey).map(window => window.id);
+                        for (const id of ids)
+                            DockService.closeWindow(id);
+                        root.dismissed();
+                    }
+                }
+                StyledMenuItem {
+                    width: parent.width
+                    implicitHeight: 32
+                    leftPadding: 8
+                    rightPadding: 8
+                    visible: root.windows.length > 0
+                    text: qsTr("Force quit")
+                    onTriggered: {
+                        root.quitFailed = false;
+                        const pids = DockService.windowsFor(root.entryKey).map(window => window.pid);
+                        root.quitFailed = !processQuit.prepare(pids) || !processQuit.confirm();
+                        if (!root.quitFailed)
+                            root.dismissed();
+                    }
+                }
+                Text {
+                    x: 8
+                    width: parent.width - 16
+                    visible: root.quitFailed
+                    text: qsTr("Unable to force quit this application.")
+                    textFormat: Text.PlainText
+                    wrapMode: Text.Wrap
+                    font.family: Fonts.ui
+                    font.pixelSize: 12
+                    color: Appearance.colors.colError
+                }
+                Rectangle {
+                    visible: root.windows.length > 0
+                    x: 8
+                    width: Math.max(0, parent.width - 16)
+                    height: 1
+                    color: Appearance.applyAlpha(Appearance.colors.colOnSurface, 0.16)
                 }
                 StyledMenuItem {
                     width: parent.width

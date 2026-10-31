@@ -11,6 +11,12 @@ Item {
     property bool vertical: false
     property string popupEdge: axis.edge
     property int itemRevision: 0
+    // These implicit extents are independent of the shortened visual band.
+    readonly property real minimumLength: (vertical ? leadingSection.implicitHeight
+                                                      + trailingSection.implicitHeight :
+                                                      leadingSection.implicitWidth
+                                                      + trailingSection.implicitWidth) + 2
+                                          * PersonalizationConfig.barInsetPadding + 8
     readonly property Item leadingInputRegionItem: leadingSection
     readonly property Item trailingInputRegionItem: trailingSection
     readonly property var backgroundItems: {
@@ -28,14 +34,14 @@ Item {
         id: leadingSection
 
         vertical: root.vertical
-        compact: (root.vertical ? root.height : root.width) < 1000
+        compact: (root.vertical ? root.screen.height : root.screen.width) < 1000
         componentCount: PersonalizationConfig.barLeadingComponents.length
 
         anchors {
             left: root.vertical ? undefined : parent.left
             top: root.vertical ? parent.top : undefined
-            leftMargin: root.vertical ? 0 : 10
-            topMargin: root.vertical ? 10 : 0
+            leftMargin: root.vertical ? 0 : PersonalizationConfig.barInsetPadding
+            topMargin: root.vertical ? PersonalizationConfig.barInsetPadding : 0
             verticalCenter: root.vertical ? undefined : parent.verticalCenter
             horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
         }
@@ -45,14 +51,14 @@ Item {
         id: trailingSection
 
         vertical: root.vertical
-        compact: (root.vertical ? root.height : root.width) < 1000
+        compact: (root.vertical ? root.screen.height : root.screen.width) < 1000
         componentCount: PersonalizationConfig.barTrailingComponents.length
 
         anchors {
             right: root.vertical ? undefined : parent.right
             bottom: root.vertical ? parent.bottom : undefined
-            rightMargin: root.vertical ? 0 : 10
-            bottomMargin: root.vertical ? 10 : 0
+            rightMargin: root.vertical ? 0 : PersonalizationConfig.barInsetPadding
+            bottomMargin: root.vertical ? PersonalizationConfig.barInsetPadding : 0
             verticalCenter: root.vertical ? undefined : parent.verticalCenter
             horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
         }

@@ -531,8 +531,11 @@ Item {
             }
         }
 
-        StyledFlickable {
+        SidebarFlickable {
             id: flick
+            refreshEnabled: root.foreground && !root.weatherSource.loading
+            refreshing: root.weatherSource.loading
+            onRefreshRequested: root.weatherSource.refresh()
 
             anchors.left: parent.left
             anchors.right: parent.right
@@ -542,21 +545,22 @@ Item {
             anchors.rightMargin: root.contentMargin
             anchors.bottomMargin: root.contentMargin
             contentWidth: width
-            contentHeight: contentColumn.implicitHeight + 4
+            contentHeight: contentColumn.implicitHeight + 4 + flick.contentTopInset
 
             Column {
                 id: contentColumn
+                y: flick.contentTopInset
 
                 width: flick.width
-                spacing: 14
+                spacing: 14 + flick.sectionExpansion
 
                 Item {
                     id: currentSummary
 
                     width: parent.width
-                    // Keep the hero independent of viewport height: extra space reveals
-                    // more forecast content instead of stretching the first screen.
-                    height: 320
+                    // Fixed design sizes give the full-height sidebar a balanced
+                    // hero while preserving forecast density; shorter outputs simply scroll.
+                    height: 408 + flick.detailExpansion * 4
 
                     Column {
                         id: currentConditionsColumn
@@ -564,7 +568,7 @@ Item {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 8
+                        spacing: 8 + flick.detailExpansion
 
                         Text {
                             width: parent.width
@@ -890,6 +894,7 @@ Item {
                 }
 
                 Item {
+
                     width: 1
                     height: 8
                 }

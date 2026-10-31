@@ -183,6 +183,24 @@ function wallpaperPosition(overflow, progress) {
     return -safeOverflow * clamp01(progress);
 }
 
+// Floating windows share the wallpaper's column progress, but have their own
+// bounded travel distance. Sidebar travel stays available at both ends of the
+// wallpaper crop, where horizontalProgress may already be clamped.
+function floatingParallaxOffset(tiledProgress, leftOpen, rightOpen,
+                                followColumns, followSidebars, distance) {
+    const travel = Math.max(0, Number(distance) || 0);
+    const progress = Number(tiledProgress);
+    let offset = followColumns
+        ? (0.5 - clamp01(isFinite(progress) ? progress : 0.5)) * travel * 2 : 0;
+    if (followSidebars) {
+        if (leftOpen)
+            offset += travel;
+        if (rightOpen)
+            offset -= travel;
+    }
+    return offset;
+}
+
 function wallpaperToScreen(offsetX, offsetY, wallpaperX, wallpaperY) {
     return {
         x: Number(offsetX) + Number(wallpaperX),

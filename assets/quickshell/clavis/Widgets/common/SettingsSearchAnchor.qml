@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import qs.Common
 import qs.Services
 
@@ -17,6 +18,15 @@ Item {
     property bool wholePage: false
     property int requestSerial: -1
     property real highlightOpacity: 0
+    readonly property Item highlightHost: {
+        // A section can itself be a layout. Its highlight must never become
+        // one of the children that contribute to that layout's geometry.
+        for (let item = target; item; item = item.parent) {
+            if (item instanceof Flickable)
+                return item.contentItem;
+        }
+        return target && target.Window.window ? target.Window.window.contentItem : null;
+    }
     visible: false
     width: 0
     height: 0
@@ -27,6 +37,14 @@ Item {
             ancestors.push(item);
         for (let index = ancestors.length - 1; index >= 0; --index)
             ancestors[index].ensurePolished();
+    }
+
+    function updateHighlightGeometry() {
+        if (!target || !highlightHost)
+            return;
+        const point = target.mapToItem(highlightHost, 0, 0);
+        highlight.x = point.x;
+        highlight.y = point.y;
     }
 
     function reveal(serial) {
@@ -44,6 +62,7 @@ Item {
                                                                     0, item.contentHeight - item.height)));
             }
         }
+        updateHighlightGeometry();
         highlightOpacity = 1;
         hold.restart();
         return true;
@@ -81,20 +100,28 @@ Item {
         }
     }
     Rectangle {
-        parent: root.target
-        anchors.fill: parent
+        id: highlight
+        parent: root.highlightHost
+        width: root.target ? root.target.width : 0
+        height: root.target ? root.target.height : 0
         radius: Metrics.cornerM
         color: Appearance.applyAlpha(Appearance.colors.colPrimary, 0.10)
         border.width: 1
         border.color: Appearance.applyAlpha(Appearance.colors.colPrimary, 0.38)
         opacity: root.highlightOpacity
-        visible: opacity > 0
+        visible: opacity > 0 && root.target && root.target.visible && parent
         z: 100
         Behavior on opacity {
             NumberAnimation {
                 duration: Appearance.animation.expressiveDefaultEffects.duration
             }
         }
+    }
+    FrameAnimation {
+        running: highlight.visible
+        // Keep the overlay aligned while scrolling, resizing or animating an
+        // ancestor without adding it to the section's own layout.
+        onTriggered: root.updateHighlightGeometry()
     }
     Timer {
         id: hold

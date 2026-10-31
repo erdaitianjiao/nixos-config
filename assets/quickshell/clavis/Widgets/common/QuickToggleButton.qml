@@ -27,26 +27,31 @@ Rectangle {
     property real padding: 6
 
     property var parentGroup: root.parent
-    readonly property int indexInParent: parentGroup && parentGroup.indexOfButton ? parentGroup.indexOfButton(root) : -1
-    readonly property int clickIndex: parentGroup && parentGroup.clickIndex !== undefined ? parentGroup.clickIndex : -1
-    readonly property bool isAtSide: indexInParent === 0 || (parentGroup && indexInParent === parentGroup.childrenCount - 1)
+    readonly property int indexInParent: parentGroup && parentGroup.indexOfButton ? parentGroup.indexOfButton(
+                                                                                        root) : -1
+    readonly property int clickIndex: parentGroup && parentGroup.clickIndex !== undefined
+                                      ? parentGroup.clickIndex : -1
+    readonly property bool isAtSide: indexInParent === 0 || (parentGroup && indexInParent
+                                                             === parentGroup.childrenCount - 1)
     readonly property bool expandedSplitStyle: expanded
     readonly property bool expandedAltAction: expandedSplitStyle && hasAltAction && !editMode
     property bool down: false
     property bool suppressRelease: false
-    property real baseWidth: (expanded && expandedWidth > 0) ? expandedWidth : baseCellWidth * cellSize + cellSpacing * (cellSize - 1)
+    property real baseWidth: (expanded && expandedWidth > 0) ? expandedWidth : baseCellWidth * cellSize
+                                                               + cellSpacing * (cellSize - 1)
     property real baseHeight: baseCellHeight
     property real clickedWidth: baseWidth + (isAtSide ? 10 : 20)
     property real clickedHeight: baseHeight
-    readonly property real restingRadius:
-        toggled ? Appearance.rounding.large : baseHeight / 2
+    readonly property real restingRadius: toggled ? Appearance.rounding.large : baseHeight / 2
 
-    signal triggered()
-    signal altTriggered()
+    signal triggered
+    signal altTriggered
     signal wheelMoved(int delta)
 
-    Layout.fillWidth: bounce && clickIndex >= 0 && indexInParent >= clickIndex - 1 && indexInParent <= clickIndex + 1
-    Layout.fillHeight: bounce && clickIndex >= 0 && indexInParent >= clickIndex - 1 && indexInParent <= clickIndex + 1
+    Layout.fillWidth: bounce && clickIndex >= 0 && indexInParent >= clickIndex - 1 && indexInParent <= clickIndex
+                      + 1
+    Layout.fillHeight: bounce && clickIndex >= 0 && indexInParent >= clickIndex - 1 && indexInParent
+                       <= clickIndex + 1
 
     implicitWidth: down && bounce ? clickedWidth : baseWidth
     implicitHeight: down && bounce ? clickedHeight : baseHeight
@@ -55,14 +60,19 @@ Rectangle {
     clip: true
     enabled: available || editMode
 
-    readonly property color textColor: toggled && !expandedSplitStyle && enabled ? Appearance.colors.colOnPrimary : Appearance.transparentize(Appearance.colors.colOnLayer2, enabled ? 0 : 0.7)
-    readonly property color iconColor: expanded ? (toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer3) : textColor
+    readonly property color textColor: toggled && !expandedSplitStyle && enabled
+                                       ? Appearance.colors.colOnPrimary : Appearance.transparentize(
+                                             Appearance.colors.colOnLayer2, enabled ? 0 : 0.7)
+    readonly property color iconColor: expanded ? (toggled ? Appearance.colors.colOnPrimary :
+                                                             Appearance.colors.colOnLayer3) : textColor
     readonly property color backgroundColor: {
         if (!root.enabled)
             return Appearance.colors.colLayer2Disabled;
         if (root.toggled && !root.expandedSplitStyle)
-            return root.down ? Appearance.colors.colPrimaryActive : buttonMouse.containsMouse ? Appearance.colors.colPrimaryHover : Appearance.colors.colPrimary;
-        return root.down ? Appearance.colors.colLayer2Active : buttonMouse.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer2;
+            return root.down ? Appearance.colors.colPrimaryActive : buttonMouse.containsMouse
+                               ? Appearance.colors.colPrimaryHover : Appearance.colors.colPrimary;
+        return root.down ? Appearance.colors.colLayer2Active : buttonMouse.containsMouse
+                           ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer2;
     }
 
     color: backgroundColor
@@ -117,8 +127,7 @@ Rectangle {
         NumberAnimation {
             duration: Appearance.animation.elementMoveFast.duration
             easing.type: Appearance.animation.elementMoveFast.type
-            easing.bezierCurve:
-                Appearance.animation.elementMoveFast.bezierCurve
+            easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
         }
     }
 
@@ -148,7 +157,8 @@ Rectangle {
 
                 anchors.fill: parent
                 radius: Math.max(0, root.radius - root.padding)
-                color: root.expandedSplitStyle ? (root.toggled ? Appearance.colors.colPrimary : Appearance.colors.colLayer3) : "transparent"
+                color: root.expandedSplitStyle ? (root.toggled ? Appearance.colors.colPrimary :
+                                                                 Appearance.colors.colLayer3) : "transparent"
 
                 Behavior on radius {
                     NumberAnimation {
@@ -185,7 +195,9 @@ Rectangle {
                     anchors.fill: parent
                     visible: root.expandedAltAction
                     radius: iconBackground.radius
-                    color: Appearance.transparentize(root.iconColor, iconMouseArea.pressed ? 0.88 : iconMouseArea.containsMouse ? 0.95 : 1)
+                    color: Appearance.transparentize(root.iconColor, iconMouseArea.pressed ? 0.88 :
+                                                                                             iconMouseArea.containsMouse
+                                                                                             ? 0.95 : 1)
 
                     Behavior on color {
                         ColorAnimation {
@@ -240,7 +252,7 @@ Rectangle {
                 root.parentGroup.clickIndex = root.indexInParent;
         }
 
-        onPressed: (event) => {
+        onPressed: event => {
             if (event.button === Qt.RightButton) {
                 root.altTriggered();
                 return;
@@ -252,7 +264,7 @@ Rectangle {
             setGroupClickIndex();
         }
 
-        onReleased: (event) => {
+        onReleased: event => {
             root.down = false;
             if (event.button !== Qt.LeftButton)
                 return;
@@ -276,14 +288,16 @@ Rectangle {
             root.suppressRelease = true;
             root.altTriggered();
         }
-        onWheel: (wheel) => {
-            root.wheelMoved(wheel.angleDelta.y);
-            wheel.accepted = true;
+        onWheel: wheel => {
+            wheel.accepted = root.editMode;
+            if (root.editMode)
+                root.wheelMoved(wheel.angleDelta.y);
         }
     }
 
     StyledToolTip {
-        extraVisibleCondition: root.tooltipText.length > 0 && (buttonMouse.containsMouse || iconMouseArea.containsMouse)
+        extraVisibleCondition: root.tooltipText.length > 0 && (buttonMouse.containsMouse
+                                                               || iconMouseArea.containsMouse)
         text: root.tooltipText
     }
 }
