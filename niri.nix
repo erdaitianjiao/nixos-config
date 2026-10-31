@@ -27,7 +27,6 @@ in {
     "niri/keybinds.sh"          = exe "keybinds.sh";
     "niri/lock.sh"              = exe "lock.sh";
     "niri/wallpaper.sh"         = exe "wallpaper.sh";
-    "niri/kitty-opacity.sh"     = exe "kitty-opacity.sh";
     "niri/bar-watch.sh"         = exe "bar-watch.sh";
     "niri/xwayland-dpi.sh"      = exe "xwayland-dpi.sh";
     "niri/qs-ipc.sh"            = exe "qs-ipc.sh";

@@ -4,7 +4,7 @@
 
 cat <<'EOF' | fuzzel --dmenu --prompt "󰌌  Keys "
 Super + Enter / T      打开终端 (kitty)
-Super + Shift + /      循环调节 kitty 透明度 (50%→30%→90%→70%)
+Ctrl + Shift + A 然后 L/M  调节 kitty 透明度 (降低/提高，1 复原，D 默认)
 Super + D              应用启动器 (Quickshell)
 Super + N              通知中心
 Super + O              窗口总览
