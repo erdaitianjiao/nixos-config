@@ -201,7 +201,15 @@ in {
   # docker 28.x 已停维护被 nixpkgs 标为不安全,改用 29.x(docker_29)
   virtualisation.docker.package = pkgs.docker_29;
   # 给容器固定 DNS (国内), 不依赖宿主机 resolv.conf, 避免局域网 DNS 不可达时容器解析失败
-  virtualisation.docker.daemon.settings.dns = [ "223.5.5.5" "114.114.114.114" ];
+  virtualisation.docker.daemon.settings = {
+    dns = [ "223.5.5.5" "114.114.114.114" ];
+    # Docker 29 的 --gpus all 走 driver 检测，需要显式注册 nvidia runtime；
+    # 否则会报 "AMD CDI spec not found"（CDI 那条路用 --device nvidia.com/gpu=all）。
+    runtimes.nvidia = {
+      path = "${pkgs.nvidia-container-toolkit.tools}/bin/nvidia-container-runtime";
+      runtimeArgs = [ ];
+    };
+  };
 
   # Docker Hub 国内直连会超时；让 dockerd 自己走本机代理（clash-verge 的 7897）。
   # 注意这是给 daemon 的，不继承用户 shell 的 http_proxy。
