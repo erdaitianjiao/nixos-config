@@ -203,6 +203,14 @@ in {
   # 给容器固定 DNS (国内), 不依赖宿主机 resolv.conf, 避免局域网 DNS 不可达时容器解析失败
   virtualisation.docker.daemon.settings.dns = [ "223.5.5.5" "114.114.114.114" ];
 
+  # Docker Hub 国内直连会超时；让 dockerd 自己走本机代理（clash-verge 的 7897）。
+  # 注意这是给 daemon 的，不继承用户 shell 的 http_proxy。
+  systemd.services.docker.environment = {
+    HTTP_PROXY = "http://127.0.0.1:7897";
+    HTTPS_PROXY = "http://127.0.0.1:7897";
+    NO_PROXY = "localhost,127.0.0.1,::1";
+  };
+
   # ─── NVIDIA 独显 (RTX 4060 Laptop + Intel 核显混合) ────────
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia = {
